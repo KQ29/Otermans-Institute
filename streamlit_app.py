@@ -9,8 +9,8 @@ from datetime import datetime, date, timedelta
 import pandas as pd
 import altair as alt
 
-# Defaults
-DEFAULT_JSON_PATH = "complete_dummy_data.json"
+# ---------- Defaults ----------
+DEFAULT_JSON_PATH = "student_fake_data.json"
 
 st.set_page_config(page_title="Student Report Generator", layout="wide")
 
@@ -57,6 +57,14 @@ def pct(n: float, d: float) -> float:
     return round(100 * n / d, 1) if d else 0.0
 
 
+def get_time_spent(r: Dict[str, Any]) -> float:
+    """Use either total_time_spent or time_spent if present."""
+    v = r.get("total_time_spent", None)
+    if v is None:
+        v = r.get("time_spent", 0)
+    return float(v or 0.0)
+
+
 def compute_age_from_dob(dob_str: str) -> str:
     """Return years as a string, or '—' if not available/invalid."""
     if not dob_str:
@@ -78,19 +86,6 @@ def compute_age_from_dob(dob_str: str) -> str:
     return str(years)
 
 
-def normalize_age_from_dob(computed: str) -> Tuple[str, List[str]]:
-    """Use only computed age; return display string and any sanity warnings."""
-    warnings = []
-    age_str = computed if computed not in ("unknown", "", None) else "—"
-    try:
-        age_val = int(computed)
-        if age_val > 25 or age_val < 4:
-            warnings.append(f"Age {age_val} is outside typical child range; please verify DOB.")
-    except Exception:
-        pass
-    return age_str, warnings
-
-
 @st.cache_data(show_spinner=False)
 def load_json(path: str) -> Dict[str, Any]:
     with open(path, encoding="utf-8") as f:
@@ -106,69 +101,196 @@ def extract_user_id_and_audience(query: str):
     return user_id, audience
 
 
-# ---------- Aggregation over all-time (for the snapshot & charts) ----------
+# ---------- Joining helpers (built for student_fake_data.json) ----------
+def build_indexes(data: Dict[str, Any]):
+    enrollment_by_id = {e["enrollment_id"]: e for e in data.get("enrollment", [])}
+    topics_by_id = {t["topic_id"]: t for t in data.get("topics", [])}
+    topic_session_by_id = {t["topic_session_id"]: t for t in data.get("topic_session", [])}
+    chapter_sessions = data.get("chapter_session", [])
+    lesson_sessions = data.get("lesson_session", [])
+    activity_perf = data.get("activity_performance", [])
+    daily_logs = data.get("daily_activity_log", [])
+    users = {u["user_id"]: u for u in data.get("user", [])}
+    return {
+        "enrollment_by_id": enrollment_by_id,
+        "topics_by_id": topics_by_id,
+        "topic_session_by_id": topic_session_by_id,
+        "chapter_sessions": chapter_sessions,
+        "lesson_sessions": lesson_sessions,
+        "activity_perf": activity_perf,
+        "daily_logs": daily_logs,
+        "users": users,
+    }
+
+
+def chapter_session_user_id(cs: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
+    """Map chapter_session -> topic_session -> enrollment -> user_id."""
+    ts = idx["topic_session_by_id"].get(cs.get("topic_session_id"))
+    if not ts:
+        return None
+    en = idx["enrollment_by_id"].get(ts.get("enrollment_id"))
+    if not en:
+        return None
+    return en.get("user_id")
+
+
+def topic_session_user_id(ts: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
+    en = idx["enrollment_by_id"].get(ts.get("enrollment_id"))
+    return en.get("user_id") if en else None
+
+
+def perf_user_id(ap: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
+    """Map activity_performance -> chapter_session -> user_id."""
+    cs_id = ap.get("chapter_session_id")
+    cs = next((c for c in idx["chapter_sessions"] if c.get("chapter_session_id") == cs_id), None)
+    if not cs:
+        return None
+    return chapter_session_user_id(cs, idx)
+
+
+def perf_subject(ap: Dict[str, Any], idx: Dict[str, Any]) -> Optional[str]:
+    """Get subject from performance row through enrollment -> topic."""
+    cs_id = ap.get("chapter_session_id")
+    cs = next((c for c in idx["chapter_sessions"] if c.get("chapter_session_id") == cs_id), None)
+    if not cs:
+        return None
+    ts = idx["topic_session_by_id"].get(cs.get("topic_session_id"))
+    if not ts:
+        return None
+    en = idx["enrollment_by_id"].get(ts.get("enrollment_id"))
+    if not en:
+        return None
+    topic = idx["topics_by_id"].get(en.get("topic_id"))
+    return topic.get("subject") if topic else None
+
+
+def available_date_range_for_user(data: Dict[str, Any], user_id: int, idx: Dict[str, Any]) -> Tuple[Optional[datetime], Optional[datetime]]:
+    dates: List[datetime] = []
+    # daily_activity_log
+    for r in idx["daily_logs"]:
+        if r.get("user_id") == user_id:
+            dt = parse_ts(r.get("login_timestamp"))
+            if dt:
+                dates.append(dt)
+    # lesson_session
+    for r in idx["lesson_sessions"]:
+        if r.get("user_id") == user_id:
+            dt = parse_ts(r.get("created_at"))
+            if dt:
+                dates.append(dt)
+    # topic_session
+    for ts in data.get("topic_session", []):
+        uid = topic_session_user_id(ts, idx)
+        if uid == user_id:
+            for k in ("started_at", "completed_at"):
+                dt = parse_ts(ts.get(k))
+                if dt:
+                    dates.append(dt)
+    # chapter_session
+    for cs in idx["chapter_sessions"]:
+        uid = chapter_session_user_id(cs, idx)
+        if uid == user_id:
+            for k in ("started_at", "completed_at"):
+                dt = parse_ts(cs.get(k))
+                if dt:
+                    dates.append(dt)
+    # activity_performance
+    for ap in idx["activity_perf"]:
+        uid = perf_user_id(ap, idx)
+        if uid == user_id:
+            dt = parse_ts(ap.get("submitted_at"))
+            if dt:
+                dates.append(dt)
+
+    if not dates:
+        return None, None
+    return min(dates), max(dates)
+
+
+# ---------- Aggregation from raw events ----------
 def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
-    user = next((u for u in data.get("user", []) if u.get("user_id") == user_id), None)
+    idx = build_indexes(data)
+
+    user = idx["users"].get(user_id)
     if user is None:
         raise ValueError(f"User {user_id} not found.")
 
-    lesson_sessions = [l for l in data.get("lesson_session", []) if l.get("user_id") == user_id]
-    chapter_sessions = [c for c in data.get("chapter_session", []) if c.get("user_id") == user_id]
-    topic_sessions = [t for t in data.get("topic_session", []) if t.get("user_id") == user_id]
-    daily_logs = [d for d in data.get("daily_activity_log", []) if d.get("user_id") == user_id]
-
-    total_time = sum([l.get("time_spent", 0) for l in lesson_sessions] +
-                     [c.get("time_spent", 0) for c in chapter_sessions] +
-                     [t.get("time_spent", 0) for t in topic_sessions] +
-                     [d.get("time_spent", 0) for d in daily_logs])
-
-    lessons_completed = sum(1 for l in lesson_sessions if l.get("is_completed"))
-    total_lessons = len(lesson_sessions)
-    lesson_completion_rate = (lessons_completed / total_lessons * 100) if total_lessons else 0
-
-    chapter_progresses = [c.get("progress_percent", 0) for c in chapter_sessions]
-    avg_chapter_progress = mean(chapter_progresses) if chapter_progresses else 0
-    chapter_progress_summary = f"{len(chapter_sessions)} chapters seen, average progress {avg_chapter_progress:.1f}%"
-
+    # Points and time from multiple sources (sum across)
+    total_points = 0.0
+    total_time = 0.0
     all_session_lengths: List[float] = []
-    all_session_lengths += [l.get("time_spent", 0) for l in lesson_sessions]
-    all_session_lengths += [c.get("time_spent", 0) for c in chapter_sessions]
-    all_session_lengths += [t.get("time_spent", 0) for t in topic_sessions]
-    avg_session_length = mean(all_session_lengths) if all_session_lengths else 0
 
-    perf = [p for p in data.get("activity_performance", []) if p.get("user_id") == user_id]
-    scores = [p.get("score", 0) for p in perf]
-    avg_score = mean(scores) if scores else 0
-    total_points = sum(p.get("points_earned", 0) for p in perf)
-    hints_used_list = [p.get("hints_used", 0) for p in perf]
-    avg_hints_used = mean(hints_used_list) if hints_used_list else 0
+    # Topic sessions (map through enrollment -> user)
+    ts_for_user = []
+    for ts in data.get("topic_session", []):
+        uid = topic_session_user_id(ts, idx)
+        if uid == user_id:
+            ts_for_user.append(ts)
+            t = get_time_spent(ts)
+            total_time += t
+            if t > 0:
+                all_session_lengths.append(t)
+            total_points += float(ts.get("points_earned", 0) or 0)
 
-    achs = [a for a in data.get("achievement", []) if a.get("user_id") == user_id]
-    badge_list = sorted({a.get("badge_name") for a in achs if a.get("badge_name")})
-    most_recent_badge = "None"
-    if achs:
-        try:
-            most_recent_badge = sorted(achs, key=lambda x: x.get("date_earned", ""), reverse=True)[0].get("badge_name", "None")
-        except Exception:
-            most_recent_badge = achs[-1].get("badge_name", "None")
+    # Chapter sessions (map through topic_session -> enrollment -> user)
+    cs_for_user = []
+    for cs in idx["chapter_sessions"]:
+        uid = chapter_session_user_id(cs, idx)
+        if uid == user_id:
+            cs_for_user.append(cs)
+            t = get_time_spent(cs)
+            total_time += t
+            if t > 0:
+                all_session_lengths.append(t)
+            total_points += float(cs.get("points_earned", 0) or 0)
 
-    feedbacks = [f for f in data.get("feedback", []) if f.get("user_id") == user_id]
-    feedback_snippets: List[str] = []
-    for f in feedbacks[:3]:
-        rating = f.get("rating")
-        comment = f.get("comment", "").strip()
-        if comment:
-            feedback_snippets.append(f'"{comment}" (rating {rating})')
-    feedback_summary = "; ".join(feedback_snippets) if feedback_snippets else "No recent feedback."
+    # Daily logs
+    for d in idx["daily_logs"]:
+        if d.get("user_id") == user_id:
+            total_time += float(d.get("time_spent", 0) or 0)
+            total_points += float(d.get("points_earned", 0) or 0)
+            if d.get("time_spent"):
+                all_session_lengths.append(float(d["time_spent"]))
 
-    # ---- AGE: compute from DOB only and never say "computed" in UI ----
+    # Lesson sessions (standalone; keep for metadata/time)
+    lesson_sessions = [l for l in idx["lesson_sessions"] if l.get("user_id") == user_id]
+    for l in lesson_sessions:
+        t = get_time_spent(l)
+        total_time += t
+        if t > 0:
+            all_session_lengths.append(t)
+
+    # Performance rows (scores + hint usage)
+    perf_rows = [ap for ap in idx["activity_perf"] if perf_user_id(ap, idx) == user_id]
+    scores = [float(p.get("score") or 0.0) for p in perf_rows]
+    avg_score = mean(scores) if scores else 0.0
+
+    hints_used = [1.0 if (p.get("used_hint") in (True, 1, "true", "True")) else 0.0 for p in perf_rows]
+    avg_hints_used = mean(hints_used) if hints_used else 0.0  # 0..1 fraction of attempts with a hint
+
+    # Completion: treat "topic completed" as topic_session.completion_percent >= 80 (tunable)
+    topics_completed = sum(1 for ts in ts_for_user if float(ts.get("completion_percent") or 0) >= 80)
+    topics_total = len(ts_for_user)
+    lesson_completion_rate = pct(topics_completed, topics_total)
+
+    # Chapter progress (average)
+    ch_progress = [float(c.get("progress_percent") or 0) for c in cs_for_user]
+    avg_chapter_progress = mean(ch_progress) if ch_progress else 0.0
+    chapter_progress_summary = f"{len(cs_for_user)} chapters seen, average progress {avg_chapter_progress:.1f}%"
+
+    avg_session_length = mean(all_session_lengths) if all_session_lengths else 0.0
+
+    # Subject growth series (from performance rows)
+    per_subject_series: Dict[str, List[Tuple[str, float]]] = {}
+    for ap in perf_rows:
+        subj = perf_subject(ap, idx) or "Unknown"
+        dt = parse_ts(ap.get("submitted_at"))
+        if dt:
+            per_subject_series.setdefault(subj, []).append((dt.date().isoformat(), float(ap.get("score") or 0)))
+
+    # User profile basics
     dob = user.get("dob", "")
-    computed_age = compute_age_from_dob(dob)
-    age_display, age_warnings = normalize_age_from_dob(computed_age)
-
-    onboarding = user.get("is_onboarding_complete", False)
-    created_at = user.get("created_at", "Unknown")
-    updated_at = user.get("updated_at", "Unknown")
+    age_display = compute_age_from_dob(dob)
     gender = user.get("gender", "Unknown")
     email = user.get("email", "Unknown")
     parental_email = user.get("parental_email", "Unknown")
@@ -180,46 +302,36 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
         "reading_level": user.get("reading_level", "Unknown"),
         "school_name": user.get("school_name", user.get("school", "Unknown")),
         "total_time": round(total_time, 1),
-        "lessons_completed": lessons_completed,
+        "lessons_completed": topics_completed,
         "lesson_completion_rate": round(lesson_completion_rate, 1),
         "chapter_progress_summary": chapter_progress_summary,
         "avg_session_length": round(avg_session_length, 1),
         "avg_score": round(avg_score, 1),
-        "total_points": total_points,
-        "avg_hints_used": round(avg_hints_used, 2),
-        "badge_list": ', '.join(badge_list) if badge_list else "None",
-        "most_recent_badge": most_recent_badge or "None",
-        "feedback_comments_and_ratings": feedback_summary,
+        "total_points": round(total_points, 1),
+        "avg_hints_used": round(avg_hints_used, 3),  # 0..1 fraction
         "dob": dob or "Unknown",
-        "age_display": age_display,          # show only this in UI
-        # "age_warnings": age_warnings,      # kept internally if you ever need, not displayed
+        "age_display": age_display,
         "gender": gender,
         "email": email,
         "parental_email": parental_email,
-        "onboarding_complete": onboarding,
-        "created_at": created_at,
-        "updated_at": updated_at,
+        "onboarding_complete": user.get("is_onboarding_complete", False),
+        "created_at": user.get("created_at", "Unknown"),
+        "updated_at": user.get("updated_at", "Unknown"),
         "avatar": avatar,
-        "micro_achievements": user.get("micro_achievements", []),
-        "adaptive_performance": user.get("adaptive_performance", []),
-        # pass through any per-skill data if present
-        "literacy_scores": user.get("literacy_scores", []),
-        "numeracy_scores": user.get("numeracy_scores", []),
-        "motor_scores": user.get("motor_scores", []),
-        "communication_scores": user.get("communication_scores", []),
-        "literacy_stage": user.get("literacy_stage", ""),
-        "numeracy_stage": user.get("numeracy_stage", ""),
-        "motor_stage": user.get("motor_stage", ""),
-        "communication_stage": user.get("communication_stage", ""),
-        "literacy_pct": user.get("literacy_pct", 0),
-        "numeracy_pct": user.get("numeracy_pct", 0),
-        "motor_pct": user.get("motor_pct", 0),
-        "communication_pct": user.get("communication_pct", 0),
+
+        # Per-subject time series derived from events
+        "subject_series": per_subject_series,
+
+        # For tables/charts
+        "ts_for_user": ts_for_user,
+        "cs_for_user": cs_for_user,
+        "lesson_sessions": lesson_sessions,
+        "perf_rows": perf_rows,
     }
     return aggregated
 
 
-# ---------- Period-based metrics for the SEN report ----------
+# ---------- Period-based metrics (using REAL keys in your JSON) ----------
 def filter_records_by_period(records: List[Dict[str, Any]], start_dt: datetime, end_dt: datetime,
                              ts_keys: List[str]) -> List[Dict[str, Any]]:
     out = []
@@ -234,48 +346,68 @@ def filter_records_by_period(records: List[Dict[str, Any]], start_dt: datetime, 
 
 def period_stats(data: Dict[str, Any], user_id: int,
                  start_dt: datetime, end_dt: datetime) -> Dict[str, Any]:
-    ts_keys_sessions = ["start_time", "created_at", "timestamp", "session_date", "date"]
+    # JSON uses: started_at, completed_at, submitted_at, login_timestamp, created_at
+    ts_keys_sessions = ["started_at", "completed_at", "created_at", "timestamp", "date"]
+    ts_keys_perf = ["submitted_at"]
     ts_keys_dailies = ["login_timestamp", "created_at", "timestamp", "date"]
 
+    idx = build_indexes(data)
+
+    # prepare collections already mapped to the selected user
+    topic_sessions_all = [t for t in data.get("topic_session", []) if topic_session_user_id(t, idx) == user_id]
+    chapter_sessions_all = [c for c in data.get("chapter_session", []) if chapter_session_user_id(c, idx) == user_id]
     lesson_sessions_all = [l for l in data.get("lesson_session", []) if l.get("user_id") == user_id]
-    chapter_sessions_all = [c for c in data.get("chapter_session", []) if c.get("user_id") == user_id]
-    topic_sessions_all = [t for t in data.get("topic_session", []) if t.get("user_id") == user_id]
+    perf_all = [ap for ap in data.get("activity_performance", []) if perf_user_id(ap, idx) == user_id]
     daily_logs_all = [d for d in data.get("daily_activity_log", []) if d.get("user_id") == user_id]
 
-    lesson_sessions = filter_records_by_period(lesson_sessions_all, start_dt, end_dt, ts_keys_sessions)
-    chapter_sessions = filter_records_by_period(chapter_sessions_all, start_dt, end_dt, ts_keys_sessions)
     topic_sessions = filter_records_by_period(topic_sessions_all, start_dt, end_dt, ts_keys_sessions)
+    chapter_sessions = filter_records_by_period(chapter_sessions_all, start_dt, end_dt, ts_keys_sessions)
+    lesson_sessions = filter_records_by_period(lesson_sessions_all, start_dt, end_dt, ts_keys_sessions)
+    perf_rows = filter_records_by_period(perf_all, start_dt, end_dt, ts_keys_perf)
     daily_logs = filter_records_by_period(daily_logs_all, start_dt, end_dt, ts_keys_dailies)
 
-    had_ts = any([lesson_sessions, chapter_sessions, topic_sessions, daily_logs]) \
-        or any(pick_first_ts(x, ts_keys_sessions) for x in (lesson_sessions_all + chapter_sessions_all + topic_sessions_all)) \
-        or any(pick_first_ts(x, ts_keys_dailies) for x in daily_logs_all)
+    had_ts = any([topic_sessions, chapter_sessions, lesson_sessions, perf_rows, daily_logs]) or \
+        any(pick_first_ts(x, ts_keys_sessions) for x in (topic_sessions_all + chapter_sessions_all + lesson_sessions_all)) or \
+        any(pick_first_ts(x, ts_keys_perf) for x in perf_all) or \
+        any(pick_first_ts(x, ts_keys_dailies) for x in daily_logs_all)
 
-    total_time = sum([l.get("time_spent", 0) for l in lesson_sessions] +
-                     [c.get("time_spent", 0) for c in chapter_sessions] +
-                     [t.get("time_spent", 0) for t in topic_sessions] +
-                     [d.get("time_spent", 0) for d in daily_logs])
+    # Totals and averages
+    total_time = sum(get_time_spent(r) for r in topic_sessions) + \
+                 sum(get_time_spent(r) for r in chapter_sessions) + \
+                 sum(float(r.get("time_spent", 0) or 0) for r in daily_logs) + \
+                 sum(get_time_spent(r) for r in lesson_sessions)
 
-    session_lengths = [l.get("time_spent", 0) for l in lesson_sessions] + \
-                      [c.get("time_spent", 0) for c in chapter_sessions] + \
-                      [t.get("time_spent", 0) for t in topic_sessions]
+    session_lengths = [get_time_spent(r) for r in topic_sessions] + \
+                      [get_time_spent(r) for r in chapter_sessions] + \
+                      [float(r.get("time_spent", 0) or 0) for r in daily_logs] + \
+                      [get_time_spent(r) for r in lesson_sessions]
+    session_lengths = [s for s in session_lengths if s and s > 0]
     sessions_count = len(session_lengths)
     avg_session_len = mean(session_lengths) if session_lengths else 0.0
 
-    completed = sum(1 for l in lesson_sessions if l.get("is_completed"))
-    total_lessons = len(lesson_sessions)
+    # Define "lessons" as topic_sessions, "done" when completion_percent >= 80
+    completed = sum(1 for t in topic_sessions if float(t.get("completion_percent") or 0) >= 80)
+    total_lessons = len(topic_sessions)
     completion_pct = pct(completed, total_lessons)
 
+    # Active days (unique dates seen across any event)
     day_set = set()
-    for coll, keys in [(lesson_sessions, ts_keys_sessions),
-                       (chapter_sessions, ts_keys_sessions),
-                       (topic_sessions, ts_keys_sessions),
-                       (daily_logs, ts_keys_dailies)]:
+    # unify helper for dates
+    def collect_dates(coll, keys):
         for r in coll:
             ts = pick_first_ts(r, keys)
             if ts:
                 day_set.add(ts.date())
+    collect_dates(topic_sessions, ts_keys_sessions)
+    collect_dates(chapter_sessions, ts_keys_sessions)
+    collect_dates(lesson_sessions, ts_keys_sessions)
+    collect_dates(daily_logs, ts_keys_dailies)
+    collect_dates(perf_rows, ts_keys_perf)
     active_days = len(day_set)
+
+    # Average score in the period
+    scores = [float(p.get("score") or 0) for p in perf_rows]
+    avg_score = mean(scores) if scores else 0.0
 
     return {
         "had_ts": had_ts,
@@ -285,7 +417,8 @@ def period_stats(data: Dict[str, Any], user_id: int,
         "lessons_done": completed,
         "lessons_total": total_lessons,
         "completion_pct": round(float(completion_pct), 1),
-        "active_days": active_days
+        "active_days": active_days,
+        "avg_score": round(avg_score, 1)
     }
 
 
@@ -303,7 +436,7 @@ def compute_focus_score(completion_pct: float, avg_session_mins: float) -> int:
     return int(clamp(base, 0, 100))
 
 
-# ---------- Report builder (11 sections) ----------
+# ---------- Report builder ----------
 def arrow(delta: int) -> str:
     return "↑" if delta >= 0 else "↓"
 
@@ -323,7 +456,7 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append(f"Reporting Period: {d['period']['start']} – {d['period']['end']}")
     rep.append(f"Prepared for: {d.get('prepared_for','')}")
     rep.append(f"Generated on: {d['period']['generated_on']}")
-    rep.append("Data Sources: sessions, attempts, completion, events, ui_preferences, ai_interactions, mastery, goals, devices, moderation_incidents\n")
+    rep.append("Data Sources: activity_performance, chapter_session, topic_session, lesson_session, daily_activity_log, topics, enrollment\n")
 
     focus_delta = d["focus"].get("focus_score_delta", 0)
     comp_pct = d["usage"].get("completion_pct", 0)
@@ -339,217 +472,267 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append(f"Completion rate: {d['usage']['lessons_done']}/{d['usage']['lessons_total']} ({d['usage']['completion_pct']}%)")
     rep.append(f"Time-on-task: {d['usage']['total_time_mins']} mins total ({d['usage'].get('trend_vs_prev_pct',0)}% vs last period)\n")
 
-    tts_on = d["accommodations"].get("tts_accuracy_on", 0.0)
-    tts_off = d["accommodations"].get("tts_accuracy_off", 0.0)
-    tts_effect_pp = int(round((tts_on - tts_off) * 100))
-    if d["accommodations"].get("tts_usage_pct", 0) < 30 and tts_effect_pp >= 5:
-        accom_summary = "Accommodations not consistently used despite measurable benefit."
-    else:
-        accom_summary = "Core supports are stable and effective, boosting accuracy and reducing distractions."
     rep.append("2) SEN Profile & Accommodations")
-    rep.append(f"Summary: {accom_summary}")
-    rep.append(f"Primary Needs: {', '.join(d['accommodations'].get('needs', [])) or '—'}")
-    rep.append(f"Accommodations: {', '.join(d['accommodations'].get('enabled', [])) or '—'}")
-    rep.append(f"Effectiveness: TTS ON → {pp01(tts_on)} vs OFF → {pp01(tts_off)} ({tts_effect_pp}pp)")
-    rep.append(f"Stability: Font size changed {d['accommodations'].get('font_size_changes',0)}× this period\n")
+    rep.append("Summary: Derived metrics only (no pre-set accommodations in source).")
+    rep.append(f"Primary Needs: —")
+    rep.append(f"Accommodations: —")
+    rep.append(f"Effectiveness: TTS ON → 0% vs OFF → 0% (0pp)")
+    rep.append(f"Stability: Font size changed 0× this period\n")
 
     eng_summary = "Strong participation and lesson completion." if comp_pct >= 70 else \
                   "Very low engagement, with limited active days and short sessions." if comp_pct < 40 else \
                   "Moderate engagement; room for higher completion."
     rep.append("3) Engagement & Usage")
     rep.append(f"Summary: {eng_summary}")
-    rep.append(f"Active Days: {d['usage'].get('active_days','—')} of 7")
+    rep.append(f"Active Days: {d['usage'].get('active_days','—')}")
     rep.append(f"Sessions: {d['usage']['sessions']} (avg. {d['usage']['avg_session_mins']} mins)")
     rep.append(f"Completion: {d['usage']['lessons_done']} of {d['usage']['lessons_total']} lessons ({d['usage']['completion_pct']}%)")
     rep.append(f"Trend: {d['usage'].get('trend_vs_prev_pct',0)}% vs last period\n")
 
-    focus_summary = "Improved attention and low distraction rates." if d["focus"]["focus_score"] >= d["focus"].get("class_median", d["focus"]["focus_score"]) \
-        else "Attention span may be limited; distraction likely higher than peers."
     rep.append("4) Focus & Concentration")
-    rep.append(f"Summary: {focus_summary}")
+    rep.append(f"Summary: {'Improved attention relative to class median.' if d['focus']['focus_score'] >= d['focus'].get('class_median', 62) else 'Below class median; consider shorter, more frequent sessions.'}")
     rep.append(f"Focus score: {d['focus']['focus_score']} (class median: {d['focus'].get('class_median','—')})")
-    rep.append(f"Avg. attention block: {d['focus'].get('avg_sustained_block_mins','—')} mins")
-    rep.append(f"Idle time: {d['focus'].get('idle_pct','—')}% | Window switches: {d['focus'].get('window_switches_per_session','—')} per session\n")
+    rep.append(f"Avg. attention block: {d['focus'].get('avg_sustained_block_mins','—')} mins\n")
 
     rep.append("5) Learning Progress & Mastery")
-    rep.append("Summary: Growth across tracked skills; weaker skill needs targeted practice.")
+    rep.append("Summary: Subject-level growth based on activity performance.")
     for s in d["learning"].get("skills", []):
         rep.append(f"- {s['name']}: {s['value']:.2f} ({s['delta']:+.02f})")
-    rep.append(f"TTFC: {d['learning'].get('ttfc_secs','—')} seconds")
-    rep.append(f"Perseverance index: {d['learning'].get('perseverance_index','—')} retries before correct\n")
+    rep.append(f"Perseverance index: {d['learning'].get('perseverance_index','—')} (fraction of attempts using hints)\n")
 
-    lang_safety = d["language"].get("safety_flags", 0)
-    lang_summary = "Language use is age-appropriate; no safety concerns." if lang_safety == 0 \
-        else "Below expected reading level and occasional off-task or frustrated tone."
     rep.append("6) Reading, Language & Expression")
-    rep.append(f"Summary: {lang_summary}")
-    rep.append(f"Readability: Grade {d['language'].get('readability_grade','—')}")
-    rep.append(f"TTR: {d['language'].get('ttr','—')}")
-    rep.append(f"Topics: {', '.join(d['language'].get('topics', [])) or '—'}")
-    rep.append(f"Tone: {d['language'].get('tone','—')}")
-    rep.append(f"Safety flags: {lang_safety}\n")
+    rep.append("Summary: Not available in this dataset.")
+    rep.append("Readability: —")
+    rep.append("TTR: —\n")
 
     rep.append("7) AI Interaction Quality & Support Usage")
-    rep.append("Summary: Supports are well-used and effective." if d["accommodations"].get("tts_usage_pct",0) >= 60
-               else "Low use of supports despite proven benefit.")
-    rep.append(f"Hints used: {d['ai_support'].get('hints_per_activity','—')} per activity (avg effect {d['ai_support'].get('hint_effect_pp','0')}pp)")
-    rep.append(f"TTS usage: {d['accommodations'].get('tts_usage_pct',0)}% of activities")
-    rep.append(f"Avatar: {d['ai_support'].get('avatar','—')} (changes {d['ai_support'].get('avatar_change_count',0)}×)\n")
+    rep.append("Summary: Derived hints usage (no built-in AI support fields in source).")
+    rep.append(f"Hints used per attempt: {d['ai_support'].get('hints_per_activity','—')}\n")
 
     rep.append("8) Motivation & Routine")
-    rep.append(f"Summary: {'Solid routine and low risk of drop-off.' if d['routine'].get('dropoff_risk','low')=='low' else 'Poor routine and high drop-off risk.'}")
-    rep.append(f"Current streak: {d['routine'].get('streak_current_days','—')} days (Longest: {d['routine'].get('streak_longest_days','—')})")
-    rep.append(f"Preferred time: {d['routine'].get('preferred_time_window','—')}")
-    rep.append(f"Drop-off risk: {d['routine'].get('dropoff_risk','—')}\n")
+    rep.append(f"Summary: {'Low drop-off risk.' if d['routine'].get('dropoff_risk','low')=='low' else 'Potential drop-off risk.'}\n")
 
-    tech_stable = d["devices"].get("crashes", 0) == 0 and d["devices"].get("high_packet_loss_sessions", 0) == 0
     rep.append("9) Technology & Accessibility Diagnostics")
-    rep.append(f"Summary: {'Stable setup with minimal tech issues.' if tech_stable else 'Tech issues may be contributing to lesson abandonment.'}")
-    rep.append(f"Device: {d['devices'].get('device_type','—')}{', screen reader enabled' if d['devices'].get('screen_reader', False) else ''}")
-    rep.append(f"Crashes: {d['devices'].get('crashes',0)} | Network issues: {d['devices'].get('high_packet_loss_sessions',0)} session(s) with high packet loss\n")
+    rep.append("Summary: Device info is partial in this dataset.\n")
 
     rep.append("10) Goals & Recommendations")
-    goals_text = []
-    for g in d.get("goals", []):
-        goals_text.append(f"- {g['skill']}: Current {g['current']:.2f}, goal {g['target']:.2f} by {g['target_date']}")
-    if goals_text:
-        rep.extend(goals_text)
-    recs = d.get("recommendations", [])
-    if not recs:
-        recs = ["Encourage regular short practice sessions (5–7 mins) on weaker skills",
-                "Use TTS for comprehension tasks if available",
-                "Reduce distractions—limit app/window switching during sessions"]
     rep.append("Recommendations:")
-    rep.extend([f"- {r}" for r in recs])
+    for r in d.get("recommendations", []):
+        rep.append(f"- {r}")
+    if not d.get("recommendations"):
+        rep.append("- Encourage regular short practice sessions (5–7 mins) on weaker subjects")
+        rep.append("- Review missed questions in recent attempts")
+        rep.append("- Use shorter sessions if average session length is below 10 mins")
     rep.append("")
 
     rep.append("11) Unanswered & Out-of-Scope Questions")
-    q = d.get("questions", {})
-    rep.append("Summary: Few AI gaps, mostly topical curiosities." if q.get("unanswered_pct", 0) <= 10 and q.get("out_of_scope_pct", 0) <= 10
-               else "Summary: Higher than average unanswered and off-topic queries—suggests confusion or off-task behaviour.")
-    rep.append(f"Total questions: {q.get('total','—')}")
-    rep.append(f"Unanswered: {q.get('unanswered_pct',0)}% | Out-of-scope: {q.get('out_of_scope_pct',0)}%")
-    examples = q.get("examples", [])
-    if examples:
-        rep.append("Examples:")
-        for e in examples[:3]:
-            rep.append(f"- “{e.get('text','…')}” ({e.get('type','')})")
-
+    rep.append("Summary: Not tracked in this dataset.")
+    rep.append("Total questions: —")
+    rep.append("Unanswered: — | Out-of-scope: —")
     return "\n".join(rep).strip()
 
 
-# ---------- Academic & skill UI ----------
-def render_academic_skill_progress(agg: Dict[str, Any]):
-    st.subheader("📊 Academic & Skill Progress")
+# ---------- Subject charts & logs ----------
+def render_subject_growth(agg: Dict[str, Any]):
+    st.subheader("📈 Subject Growth (derived from activity_performance)")
+    if not agg.get("subject_series"):
+        st.write("No subject-level performance history available for this user in the selected period or dataset.")
+        return
 
-    # 1. Curriculum / Goal Completion — vertical bar chart
-    st.markdown("**1. Curriculum / Goal Completion**")
-    skill_data = [
-        {"skill": "Literacy", "pct": agg.get("literacy_pct", 0), "stage": agg.get("literacy_stage") or "Unknown"},
-        {"skill": "Numeracy", "pct": agg.get("numeracy_pct", 0), "stage": agg.get("numeracy_stage") or "Unknown"},
-        {"skill": "Motor", "pct": agg.get("motor_pct", 0), "stage": agg.get("motor_stage") or "Unknown"},
-        {"skill": "Communication", "pct": agg.get("communication_pct", 0), "stage": agg.get("communication_stage") or "Unknown"},
-    ]
-    df_completion = pd.DataFrame(skill_data)
-
-    if df_completion["pct"].sum() == 0:
-        st.write("No curriculum/goal completion data available.")
-    else:
-        bar = alt.Chart(df_completion).mark_bar().encode(
-            x=alt.X("skill:N", title="Skill"),
-            y=alt.Y("pct:Q", title="Completion %", scale=alt.Scale(domain=[0, 100])),
-            tooltip=["skill", "pct", "stage"]
-        ).properties(height=250)
-        text = bar.mark_text(dy=-5).encode(text=alt.Text("pct:Q", format=".0f"))
-        st.altair_chart((bar + text).configure_axis(labelFontSize=12), use_container_width=True)
-        stages = ", ".join(f"{row['skill']}: {row['stage']}" for _, row in df_completion.iterrows())
-        st.caption(f"Current stages — {stages}")
-
-    # 2. Skill Growth
-    st.markdown("**2. Skill Growth**")
-    tabs = st.tabs(["Literacy", "Numeracy", "Motor", "Communication"])
-    for tab_obj, (skill_key, score_key, stage_key) in zip(
-        tabs,
-        [
-            ("literacy", "literacy_scores", "literacy_stage"),
-            ("numeracy", "numeracy_scores", "numeracy_stage"),
-            ("motor", "motor_scores", "motor_stage"),
-            ("communication", "communication_scores", "communication_stage"),
-        ],
-    ):
+    tabs = st.tabs(list(agg["subject_series"].keys()))
+    for tab_obj, subject in zip(tabs, agg["subject_series"].keys()):
         with tab_obj:
-            history = agg.get(score_key, [])
-            if history:
-                df = pd.DataFrame(history, columns=["date", "score"]) if isinstance(history[0], (list, tuple)) else pd.DataFrame(history)
-                if "date" not in df.columns or "score" not in df.columns:
-                    st.write("Unexpected score history format.")
-                else:
-                    try:
-                        df["date"] = pd.to_datetime(df["date"])
-                    except Exception:
-                        pass
-                    chart = alt.Chart(df).mark_line(point=True).encode(
-                        x="date:T", y="score:Q"
-                    ).properties(height=180, title=f"{skill_key.title()} score over time")
-                    st.altair_chart(chart, use_container_width=True)
-                    if len(df) >= 2 and df["score"].iloc[0] != 0:
-                        try:
-                            pct_imp = (df["score"].iloc[-1] - df["score"].iloc[0]) / abs(df["score"].iloc[0]) * 100
-                            st.write(f"% improvement: {pct_imp:.0f}% from {df['date'].iloc[0].date()}")
-                        except Exception:
-                            pass
-                    stage = agg.get(stage_key)
-                    st.write(f"Current skill stage: {stage or 'Unknown'}")
-            else:
-                st.write("No score history available for this skill.")
+            hist = agg["subject_series"][subject]
+            if not hist:
+                st.write("No data.")
+                continue
+            df = pd.DataFrame(hist, columns=["date", "score"])
+            try:
+                df["date"] = pd.to_datetime(df["date"])
+            except Exception:
+                pass
+            chart = alt.Chart(df).mark_line(point=True).encode(
+                x="date:T", y="score:Q"
+            ).properties(height=200, title=f"{subject} — score over time")
+            st.altair_chart(chart, use_container_width=True)
+            if len(df) >= 2 and float(df["score"].iloc[0]) != 0:
+                try:
+                    pct_imp = (df["score"].iloc[-1] - df["score"].iloc[0]) / abs(df["score"].iloc[0]) * 100
+                    st.write(f"% improvement: {pct_imp:.0f}% from {df['date'].iloc[0].date()}")
+                except Exception:
+                    pass
 
-    # 3. Micro-Achievements
-    st.markdown("**3. Micro-Achievements**")
-    if agg.get("micro_achievements"):
-        for date_str, ach in agg.get("micro_achievements", []):
-            st.markdown(f"- 🟢 {date_str} — {ach}")
-    else:
-        st.write("No micro-achievements recorded.")
 
-    # 4. Adaptive Performance
-    st.markdown("**4. Adaptive Performance**")
-    table = agg.get("adaptive_performance", [])
-    if table:
-        df = pd.DataFrame(table)
-        st.table(df)
-    else:
-        st.write("No adaptive performance data.")
+def render_event_log_table(data: Dict[str, Any], user_id: int):
+    st.subheader("🧾 Per-event log (joined)")
+
+    idx = build_indexes(data)
+
+    rows: List[Dict[str, Any]] = []
+
+    # Daily logs
+    for r in idx["daily_logs"]:
+        if r.get("user_id") == user_id:
+            rows.append({
+                "event": "daily_login",
+                "timestamp": r.get("login_timestamp"),
+                "subject": "—",
+                "score": "—",
+                "points": r.get("points_earned", 0),
+                "time_spent": r.get("time_spent", 0),
+                "chapter_session_id": "—",
+                "topic_session_id": "—",
+                "device": r.get("device_type", "—"),
+            })
+
+    # Lesson sessions
+    for l in idx["lesson_sessions"]:
+        if l.get("user_id") == user_id:
+            rows.append({
+                "event": "lesson_session",
+                "timestamp": l.get("created_at"),
+                "subject": "—",
+                "score": "—",
+                "points": l.get("points_earned", 0),
+                "time_spent": get_time_spent(l),
+                "chapter_session_id": "—",
+                "topic_session_id": "—",
+                "device": l.get("device_type", "—"),
+            })
+
+    # Topic sessions
+    for ts in data.get("topic_session", []):
+        uid = topic_session_user_id(ts, idx)
+        if uid != user_id:
+            continue
+        en = idx["enrollment_by_id"].get(ts.get("enrollment_id"))
+        subj = "—"
+        if en:
+            topic = idx["topics_by_id"].get(en.get("topic_id"))
+            if topic:
+                subj = topic.get("subject", "—")
+        rows.append({
+            "event": "topic_session",
+            "timestamp": ts.get("started_at") or ts.get("completed_at"),
+            "subject": subj,
+            "score": "—",
+            "points": ts.get("points_earned", 0),
+            "time_spent": get_time_spent(ts),
+            "chapter_session_id": "—",
+            "topic_session_id": ts.get("topic_session_id"),
+            "device": ts.get("device_type", "—"),
+        })
+
+    # Chapter sessions
+    for cs in data.get("chapter_session", []):
+        uid = chapter_session_user_id(cs, idx)
+        if uid != user_id:
+            continue
+        ts = idx["topic_session_by_id"].get(cs.get("topic_session_id"))
+        subj = "—"
+        if ts:
+            en = idx["enrollment_by_id"].get(ts.get("enrollment_id"))
+            if en:
+                topic = idx["topics_by_id"].get(en.get("topic_id"))
+                if topic:
+                    subj = topic.get("subject", "—")
+        rows.append({
+            "event": "chapter_session",
+            "timestamp": cs.get("started_at") or cs.get("completed_at"),
+            "subject": subj,
+            "score": "—",
+            "points": cs.get("points_earned", 0),
+            "time_spent": get_time_spent(cs),
+            "chapter_session_id": cs.get("chapter_session_id"),
+            "topic_session_id": cs.get("topic_session_id"),
+            "device": "—",
+        })
+
+    # Activity performance rows
+    for ap in data.get("activity_performance", []):
+        uid = perf_user_id(ap, idx)
+        if uid != user_id:
+            continue
+        subj = perf_subject(ap, idx) or "—"
+        rows.append({
+            "event": "activity_attempt",
+            "timestamp": ap.get("submitted_at"),
+            "subject": subj,
+            "score": ap.get("score", "—"),
+            "points": ap.get("points_earned", 0),
+            "time_spent": "—",
+            "chapter_session_id": ap.get("chapter_session_id"),
+            "topic_session_id": "—",
+            "device": "—",
+        })
+
+    if not rows:
+        st.info("No events found for this user in the dataset.")
+        return
+
+    df = pd.DataFrame(rows).sort_values("timestamp")
+    st.dataframe(df, use_container_width=True)
+    st.download_button("Download events (.csv)", df.to_csv(index=False).encode("utf-8"),
+                       file_name=f"user_{user_id}_events.csv", mime="text/csv")
 
 
 # ---------- Streamlit main ----------
 def main():
-    st.title("Student Report Generator")
-    st.markdown("Query like: `give summary about user_id 1`.")
+    st.title("Student Report Generator (from raw events)")
+    st.markdown("Type a query like: `give summary about user_id 8 for teacher`.")
 
     # Inputs
     data_path = st.sidebar.text_input("JSON data path", value=DEFAULT_JSON_PATH)
 
+    # We let the user type query first, so we can set a smart default range later
+    query = st.text_input("Query", value="give summary about user_id 8")
+
+    # Load data (once)
+    if not Path(data_path).exists():
+        st.error(f"JSON file not found at {data_path}")
+        return
+    try:
+        data = load_json(data_path)
+    except Exception as e:
+        st.error(f"Failed to load JSON: {e}")
+        return
+
+    # Parse user/audience
+    user_id, audience = extract_user_id_and_audience(query)
+    if user_id is None:
+        st.info("Could not extract `user_id` from query. Use syntax like 'user_id 8'.")
+        # Show users present so the user can pick
+        users = pd.DataFrame(data.get("user", []))
+        if not users.empty:
+            st.write("Users in dataset:")
+            st.table(users[["user_id", "name", "email", "class_level"]])
+        return
+
+    idx = build_indexes(data)
+
+    # Recommended available date range (full extent of events for this user)
+    rec_start, rec_end = available_date_range_for_user(data, user_id, idx)
+
+    # Date inputs (default to recommended range if available, else last 7 days)
     today = date.today()
-    default_start = today - timedelta(days=6)
+    if rec_end:
+        default_end = rec_end.date()
+    else:
+        default_end = today
+    if rec_start:
+        default_start = rec_start.date()
+    else:
+        default_start = default_end - timedelta(days=6)
+
+    st.sidebar.caption("Pick a date range that overlaps your user's events.")
     start_date = st.sidebar.date_input("Report start date", value=default_start)
-    end_date = st.sidebar.date_input("Report end date", value=today)
-    query = st.text_input("Query", value="give summary about user_id 1")
+    end_date = st.sidebar.date_input("Report end date", value=default_end)
+
+    if rec_start and rec_end:
+        st.success(f"Recommended date range for user {user_id}: **{rec_start.date()} → {rec_end.date()}** "
+                   f"(covers all their events).")
 
     if st.button("Run"):
-        if not Path(data_path).exists():
-            st.error(f"JSON file not found at {data_path}")
-            return
-        try:
-            data = load_json(data_path)
-        except Exception as e:
-            st.error(f"Failed to load JSON: {e}")
-            return
-
-        user_id, audience = extract_user_id_and_audience(query)
-        if user_id is None:
-            st.error("Could not extract user_id from query. Use syntax like 'user_id 3'.")
-            return
-
         try:
             agg = aggregate_student(data, user_id)
         except Exception as e:
@@ -561,25 +744,26 @@ def main():
         end_dt = datetime.combine(end_date, datetime.max.time())
         curr = period_stats(data, user_id, start_dt, end_dt)
 
-        prev_span_days = (end_dt.date() - start_dt.date()).days + 1
+        prev_span_days = max(1, (end_dt.date() - start_dt.date()).days + 1)
         prev_end = start_dt - timedelta(seconds=1)
         prev_start = prev_end - timedelta(days=prev_span_days - 1)
         prev = period_stats(data, user_id, prev_start, prev_end)
 
         trend_vs_prev = compute_trend(curr["total_time_mins"], prev["total_time_mins"])
 
-        # ---- User metadata (Age uses DOB only; no "computed" wording) ----
+        # ---- User metadata ----
         display_user_metadata(agg)
 
-        # ---- Engagement & Performance Snapshot (with donut pie for avg score) ----
+        # ---- Engagement & Performance Snapshot ----
         st.subheader(f"Engagement & Performance Snapshot for {agg['name']} (ID {user_id})")
 
         mcol, pcol = st.columns([1, 1])
         with mcol:
-            st.metric("Average activity score", f"{agg['avg_score']}%")
+            st.metric("Average activity score", f"{curr['avg_score']}%")
+            st.metric("Avg session length", f"{curr['avg_session_mins']} mins")
 
         with pcol:
-            score_val = max(0, min(100, float(agg.get("avg_score", 0))))
+            score_val = max(0, min(100, float(curr.get("avg_score", 0))))
             pie_df = pd.DataFrame(
                 [{"label": "Score", "value": score_val},
                  {"label": "Remaining", "value": max(0.0, 100.0 - score_val)}]
@@ -588,104 +772,63 @@ def main():
                 theta=alt.Theta("value:Q"),
                 color=alt.Color("label:N", legend=None),
                 tooltip=["label:N", alt.Tooltip("value:Q", format=".1f")]
-            ).properties(height=160, width=160, title="Average activity score")
+            ).properties(height=160, width=160, title="Average activity score (period)")
             st.altair_chart(donut, use_container_width=False)
 
         c1, c2, c3 = st.columns(3)
-        c1.write(f"**Lessons completed:** {agg['lessons_completed']} ({agg['lesson_completion_rate']}%)")
-        c2.write(f"**Total time:** {agg['total_time']} minutes")
-        c3.write(f"**Avg session length:** {agg['avg_session_length']} minutes")
-        st.write(f"**Badges:** {agg['badge_list']} (most recent: {agg['most_recent_badge']})")
-        st.write(f"**Feedback summary:** {agg['feedback_comments_and_ratings']}")
+        c1.write(f"**Lessons completed (topics ≥80%):** {curr['lessons_done']} / {curr['lessons_total']} "
+                 f"({curr['completion_pct']}%)")
+        c2.write(f"**Total time:** {curr['total_time_mins']} minutes")
+        c3.write(f"**Sessions counted:** {curr['sessions']}")
+        st.write(f"**All-time points:** {agg['total_points']} | **All-time avg session:** {agg['avg_session_length']} mins")
+        st.write(f"**All-time chapter progress:** {agg['chapter_progress_summary']}")
+        st.write(f"**Hints usage (all-time):** {agg['avg_hints_used']} of attempts used a hint (0..1)")
 
-        # Academic & Skill Progress
-        render_academic_skill_progress(agg)
+        # ---- Subject charts (from performance history) ----
+        render_subject_growth(agg)
 
         # ---------- SEN Report (period-based) ----------
-        st.subheader("🧾 SEN Report (11 sections)")
+        st.subheader("🧾 SEN Report (auto-generated)")
         if not curr["had_ts"]:
-            st.warning("No reliable timestamps found in your data. The period-based figures may be limited or zero. "
-                       "Add timestamps like 'start_time', 'created_at', or 'login_timestamp' for better accuracy.")
+            st.warning("No reliable timestamps found **in your selected range**. "
+                       "Use the recommended range above for complete figures.")
 
-        dev = {
-            "device_type": (data.get("devices_by_user", {}).get(str(user_id), {}).get("device_type", "Unknown"))
-                           if isinstance(data.get("devices_by_user"), dict) else "Unknown",
-            "screen_reader": data.get("devices_by_user", {}).get(str(user_id), {}).get("screen_reader", False)
-                             if isinstance(data.get("devices_by_user"), dict) else False,
-            "crashes": data.get("devices_by_user", {}).get(str(user_id), {}).get("crashes", 0)
-                       if isinstance(data.get("devices_by_user"), dict) else 0,
-            "high_packet_loss_sessions": data.get("devices_by_user", {}).get(str(user_id), {}).get("high_packet_loss_sessions", 0)
-                       if isinstance(data.get("devices_by_user"), dict) else 0,
-        }
-
-        # Learning skills from agg (if present)
-        skills = []
-        for name, value, delta in [
-            ("Reading", agg.get("literacy_pct", 0)/100.0, 0.00),
-            ("Numeracy", agg.get("numeracy_pct", 0)/100.0, 0.00),
-            ("Motor", agg.get("motor_pct", 0)/100.0, 0.00),
-            ("Communication", agg.get("communication_pct", 0)/100.0, 0.00),
-        ]:
-            skills.append({"name": name, "value": float(value), "delta": float(delta)})
-
-        language = {
-            "readability_grade": "—",
-            "ttr": "—",
-            "topics": [],
-            "tone": "neutral",
-            "safety_flags": 0
-        }
-
-        ai_support = {
-            "hints_per_activity": agg.get("avg_hints_used", 0),
-            "hint_effect_pp": 0,
-            "avatar": "—",
-            "avatar_change_count": 0
-        }
-
-        dropoff_risk = "high" if (curr["active_days"] <= 3 or curr["completion_pct"] < 40) else ("medium" if curr["completion_pct"] < 60 else "low")
-        routine = {
-            "streak_current_days": "—",
-            "streak_longest_days": "—",
-            "preferred_time_window": "—",
-            "dropoff_risk": dropoff_risk
-        }
-
+        # Focus score & deltas
         focus_score_now = compute_focus_score(curr["completion_pct"], curr["avg_session_mins"])
         focus_score_prev = compute_focus_score(prev["completion_pct"], prev["avg_session_mins"])
         focus_delta = focus_score_now - focus_score_prev
 
-        goals = data.get("goals_by_user", {}).get(str(user_id), [])
-        norm_goals = []
-        for g in goals:
-            try:
-                norm_goals.append({
-                    "skill": g["skill"],
-                    "current": float(g.get("current", 0)),
-                    "target": float(g.get("target", 0)),
-                    "target_date": g.get("target_date", "")
-                })
-            except Exception:
-                continue
+        # Simple “skills” summary derived from subjects: current period average by subject (delta vs previous)
+        subject_to_scores_curr: Dict[str, List[float]] = {}
+        subject_to_scores_prev: Dict[str, List[float]] = {}
+        # Build per-subject from performance rows on-the-fly
+        idx_local = build_indexes(data)
+        def perf_rows_in_range(start_dt, end_dt):
+            rows = []
+            for ap in data.get("activity_performance", []):
+                if perf_user_id(ap, idx_local) != user_id:
+                    continue
+                dt = parse_ts(ap.get("submitted_at"))
+                if dt and (start_dt <= dt <= end_dt):
+                    rows.append(ap)
+            return rows
 
-        questions = data.get("questions_by_user", {}).get(str(user_id), {})
-        if not isinstance(questions, dict):
-            questions = {}
-        questions.setdefault("total", 0)
-        questions.setdefault("unanswered_pct", 0)
-        questions.setdefault("out_of_scope_pct", 0)
-        questions.setdefault("examples", [])
+        prs_curr = perf_rows_in_range(start_dt, end_dt)
+        prs_prev = perf_rows_in_range(prev_start, prev_end)
 
-        ui_prefs = data.get("ui_preferences_by_user", {}).get(str(user_id), {}) if isinstance(data.get("ui_preferences_by_user"), dict) else {}
-        accommodations = {
-            "needs": ui_prefs.get("needs", []),
-            "enabled": ui_prefs.get("enabled", []),
-            "tts_usage_pct": ui_prefs.get("tts_usage_pct", 0),
-            "tts_accuracy_on": ui_prefs.get("tts_accuracy_on", 0.0),
-            "tts_accuracy_off": ui_prefs.get("tts_accuracy_off", 0.0),
-            "contrast_idle_delta_pct": ui_prefs.get("contrast_idle_delta_pct", 0),
-            "font_size_changes": ui_prefs.get("font_size_changes", 0)
-        }
+        for row, bucket in [(prs_curr, subject_to_scores_curr), (prs_prev, subject_to_scores_prev)]:
+            for ap in row:
+                subj = perf_subject(ap, idx_local) or "Unknown"
+                bucket.setdefault(subj, []).append(float(ap.get("score") or 0))
+
+        skills = []
+        for subj, vals in subject_to_scores_curr.items():
+            v_now = mean(vals) if vals else 0.0
+            v_prev = mean(subject_to_scores_prev.get(subj, [])) if subject_to_scores_prev.get(subj) else 0.0
+            skills.append({"name": subj, "value": v_now/100.0, "delta": (v_now - v_prev)/100.0})
+
+        # Routine risk (simple rule-of-thumb)
+        dropoff_risk = "high" if (curr["active_days"] <= 2 or curr["completion_pct"] < 30) else ("medium" if curr["completion_pct"] < 60 else "low")
 
         report_data = {
             "student": {
@@ -700,7 +843,7 @@ def main():
                 "generated_on": date.today().isoformat()
             },
             "prepared_for": "Teacher" if audience == "teacher" else "Parent/Carer",
-            "devices": dev,
+            "devices": {},
             "usage": {
                 "active_days": curr.get("active_days", "—"),
                 "sessions": curr["sessions"],
@@ -716,21 +859,22 @@ def main():
                 "focus_score_delta": focus_delta,
                 "class_median": 62,
                 "avg_sustained_block_mins": curr["avg_session_mins"],
-                "idle_pct": "—",
-                "window_switches_per_session": "—"
             },
-            "accommodations": accommodations,
+            "accommodations": {},
             "learning": {
                 "skills": skills,
-                "perseverance_index": round(max(0.9, agg.get("avg_hints_used", 0.9)), 1),
-                "ttfc_secs": 45
+                "perseverance_index": agg.get("avg_hints_used", "—"),
             },
-            "language": language,
-            "ai_support": ai_support,
-            "routine": routine,
-            "goals": norm_goals,
+            "language": {},
+            "ai_support": {
+                "hints_per_activity": agg.get("avg_hints_used", "—"),
+            },
+            "routine": {
+                "dropoff_risk": dropoff_risk
+            },
+            "goals": [],
             "recommendations": [],
-            "questions": questions
+            "questions": {}
         }
 
         report_text = build_report(report_data)
@@ -741,6 +885,9 @@ def main():
             file_name=f"sen_report_user_{user_id}_{start_date}_{end_date}.txt",
             mime="text/plain"
         )
+
+        # Joined event log (so you can see exactly what's driving the metrics)
+        render_event_log_table(data, user_id)
 
 
 def display_user_metadata(agg: Dict[str, Any]):
@@ -757,9 +904,10 @@ def display_user_metadata(agg: Dict[str, Any]):
             f"**Gender:** {agg['gender']}\n\n"
             f"**Email:** {agg['email']}\n\n"
             f"**Parental Email:** {agg['parental_email']}\n\n"
-            f"**School:** {agg['school_name']}, **Class Level:** {agg['class_level']}, **Reading Level:** {agg['reading_level']}\n\n"
+            f"**School:** {agg['school_name']}, **Class Level:** {agg['class_level']}, "
+            f"**Reading Level:** {agg['reading_level']}\n\n"
             f"**Account Created:** {agg['created_at']}, **Last Updated:** {agg['updated_at']}\n\n"
-            f"**Onboarding Complete:** {agg['onboarding_complete']}"
+            f"**All-time points:** {agg['total_points']} | **Avg session:** {agg['avg_session_length']} mins"
         )
         cols[1].markdown(info)
 
