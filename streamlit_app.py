@@ -8,9 +8,10 @@ from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime, date, timedelta
 import pandas as pd
 import altair as alt
+import plotly.graph_objects as go  # <-- Plotly for full pies
 
 # ---------- Defaults ----------
-DEFAULT_JSON_PATH = "student_fake_data.json"
+DEFAULT_JSON_PATH = "fake_data.json"
 
 st.set_page_config(page_title="Student Report Generator", layout="wide")
 
@@ -21,7 +22,10 @@ def parse_ts(ts: Any) -> Optional[datetime]:
     if ts is None:
         return None
     if isinstance(ts, (datetime, pd.Timestamp)):
-        return pd.to_datetime(ts).to_pydatetime()
+        try:
+            return pd.to_datetime(ts).to_pydatetime()
+        except Exception:
+            return None
     s = str(ts).strip()
     fmts = [
         "%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z",
@@ -35,7 +39,8 @@ def parse_ts(ts: Any) -> Optional[datetime]:
         except Exception:
             continue
     try:
-        return pd.to_datetime(s, errors="coerce").to_pydatetime()
+        dt = pd.to_datetime(s, errors="coerce")
+        return None if pd.isna(dt) else dt.to_pydatetime()
     except Exception:
         return None
 
@@ -58,24 +63,27 @@ def pct(n: float, d: float) -> float:
 
 
 def get_time_spent(r: Dict[str, Any]) -> float:
-    """Use either total_time_spent or time_spent if present."""
+    """Use either total_time_spent or time_spent if present (minutes)."""
     v = r.get("total_time_spent", None)
     if v is None:
         v = r.get("time_spent", 0)
-    return float(v or 0.0)
+    try:
+        return float(v or 0.0)
+    except Exception:
+        return 0.0
 
 
 def compute_age_from_dob(dob_str: str) -> str:
     """Return years as a string, or '—' if not available/invalid."""
     if not dob_str:
         return "—"
-    # Try multiple common formats
+    dob = None
     for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
         try:
             dob = datetime.strptime(dob_str, fmt).date()
             break
         except Exception:
-            dob = None
+            pass
     if dob is None:
         try:
             dob = datetime.fromisoformat(dob_str).date()
@@ -86,10 +94,49 @@ def compute_age_from_dob(dob_str: str) -> str:
     return str(years)
 
 
+# ---------- Loading & normalization (works for fake_data.json and student_fake_data.json) ----------
 @st.cache_data(show_spinner=False)
-def load_json(path: str) -> Dict[str, Any]:
+def load_json_raw(path: str):
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def normalize_union(raw) -> Dict[str, Any]:
+    """
+    Accepts either:
+      - A flat dict (like student_fake_data.json)
+      - An array of per-user bundles (like fake_data.json) with keys including 'Topics'
+    Returns a single dict of lists with unified key 'topics'.
+    """
+    if isinstance(raw, dict):
+        data = dict(raw)
+        if "topics" not in data and "Topics" in data:
+            data["topics"] = data.get("Topics", [])
+        for k in ["user", "enrollment", "daily_activity_log", "topic_session",
+                  "chapter_session", "activity_performance", "lesson_session", "topics"]:
+            data.setdefault(k, [])
+        return data
+
+    buckets: Dict[str, List[Any]] = {}
+    for bundle in raw:
+        if not isinstance(bundle, dict):
+            continue
+        for k, v in bundle.items():
+            key = "topics" if k == "Topics" else k
+            if isinstance(v, list):
+                buckets.setdefault(key, []).extend(v)
+            else:
+                buckets.setdefault(key, []).append(v)
+    for k in ["user", "enrollment", "daily_activity_log", "topic_session",
+              "chapter_session", "activity_performance", "lesson_session", "topics"]:
+        buckets.setdefault(k, [])
+    return buckets
+
+
+@st.cache_data(show_spinner=False)
+def load_json(path: str) -> Dict[str, Any]:
+    raw = load_json_raw(path)
+    return normalize_union(raw)
 
 
 def extract_user_id_and_audience(query: str):
@@ -101,16 +148,16 @@ def extract_user_id_and_audience(query: str):
     return user_id, audience
 
 
-# ---------- Joining helpers (built for student_fake_data.json) ----------
+# ---------- Joining helpers ----------
 def build_indexes(data: Dict[str, Any]):
-    enrollment_by_id = {e["enrollment_id"]: e for e in data.get("enrollment", [])}
-    topics_by_id = {t["topic_id"]: t for t in data.get("topics", [])}
-    topic_session_by_id = {t["topic_session_id"]: t for t in data.get("topic_session", [])}
-    chapter_sessions = data.get("chapter_session", [])
-    lesson_sessions = data.get("lesson_session", [])
-    activity_perf = data.get("activity_performance", [])
-    daily_logs = data.get("daily_activity_log", [])
-    users = {u["user_id"]: u for u in data.get("user", [])}
+    enrollment_by_id = {e["enrollment_id"]: e for e in data.get("enrollment", []) if "enrollment_id" in e}
+    topics_by_id = {t["topic_id"]: t for t in data.get("topics", []) if "topic_id" in t}
+    topic_session_by_id = {t["topic_session_id"]: t for t in data.get("topic_session", []) if "topic_session_id" in t}
+    chapter_sessions = [c for c in data.get("chapter_session", []) if isinstance(c, dict)]
+    lesson_sessions = [l for l in data.get("lesson_session", []) if isinstance(l, dict)]
+    activity_perf = [a for a in data.get("activity_performance", []) if isinstance(a, dict)]
+    daily_logs = [d for d in data.get("daily_activity_log", []) if isinstance(d, dict)]
+    users = {u["user_id"]: u for u in data.get("user", []) if isinstance(u, dict) and "user_id" in u}
     return {
         "enrollment_by_id": enrollment_by_id,
         "topics_by_id": topics_by_id,
@@ -124,7 +171,6 @@ def build_indexes(data: Dict[str, Any]):
 
 
 def chapter_session_user_id(cs: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
-    """Map chapter_session -> topic_session -> enrollment -> user_id."""
     ts = idx["topic_session_by_id"].get(cs.get("topic_session_id"))
     if not ts:
         return None
@@ -140,7 +186,6 @@ def topic_session_user_id(ts: Dict[str, Any], idx: Dict[str, Any]) -> Optional[i
 
 
 def perf_user_id(ap: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
-    """Map activity_performance -> chapter_session -> user_id."""
     cs_id = ap.get("chapter_session_id")
     cs = next((c for c in idx["chapter_sessions"] if c.get("chapter_session_id") == cs_id), None)
     if not cs:
@@ -149,7 +194,6 @@ def perf_user_id(ap: Dict[str, Any], idx: Dict[str, Any]) -> Optional[int]:
 
 
 def perf_subject(ap: Dict[str, Any], idx: Dict[str, Any]) -> Optional[str]:
-    """Get subject from performance row through enrollment -> topic."""
     cs_id = ap.get("chapter_session_id")
     cs = next((c for c in idx["chapter_sessions"] if c.get("chapter_session_id") == cs_id), None)
     if not cs:
@@ -215,12 +259,11 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
     if user is None:
         raise ValueError(f"User {user_id} not found.")
 
-    # Points and time from multiple sources (sum across)
     total_points = 0.0
     total_time = 0.0
     all_session_lengths: List[float] = []
 
-    # Topic sessions (map through enrollment -> user)
+    # Topic sessions
     ts_for_user = []
     for ts in data.get("topic_session", []):
         uid = topic_session_user_id(ts, idx)
@@ -232,7 +275,7 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
                 all_session_lengths.append(t)
             total_points += float(ts.get("points_earned", 0) or 0)
 
-    # Chapter sessions (map through topic_session -> enrollment -> user)
+    # Chapter sessions
     cs_for_user = []
     for cs in idx["chapter_sessions"]:
         uid = chapter_session_user_id(cs, idx)
@@ -252,7 +295,7 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
             if d.get("time_spent"):
                 all_session_lengths.append(float(d["time_spent"]))
 
-    # Lesson sessions (standalone; keep for metadata/time)
+    # Lesson sessions
     lesson_sessions = [l for l in idx["lesson_sessions"] if l.get("user_id") == user_id]
     for l in lesson_sessions:
         t = get_time_spent(l)
@@ -260,35 +303,37 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
         if t > 0:
             all_session_lengths.append(t)
 
-    # Performance rows (scores + hint usage)
+    # Performance rows
     perf_rows = [ap for ap in idx["activity_perf"] if perf_user_id(ap, idx) == user_id]
-    scores = [float(p.get("score") or 0.0) for p in perf_rows]
+    scores = [float(p.get("score")) if p.get("score") not in (None, "") else (100.0 if p.get("is_right") else 0.0)
+              for p in perf_rows]
     avg_score = mean(scores) if scores else 0.0
 
     hints_used = [1.0 if (p.get("used_hint") in (True, 1, "true", "True")) else 0.0 for p in perf_rows]
-    avg_hints_used = mean(hints_used) if hints_used else 0.0  # 0..1 fraction of attempts with a hint
+    avg_hints_used = mean(hints_used) if hints_used else 0.0
 
-    # Completion: treat "topic completed" as topic_session.completion_percent >= 80 (tunable)
+    # Completion via topic_session.completion_percent >= 80
     topics_completed = sum(1 for ts in ts_for_user if float(ts.get("completion_percent") or 0) >= 80)
     topics_total = len(ts_for_user)
     lesson_completion_rate = pct(topics_completed, topics_total)
 
-    # Chapter progress (average)
+    # Chapter progress
     ch_progress = [float(c.get("progress_percent") or 0) for c in cs_for_user]
     avg_chapter_progress = mean(ch_progress) if ch_progress else 0.0
     chapter_progress_summary = f"{len(cs_for_user)} chapters seen, average progress {avg_chapter_progress:.1f}%"
 
     avg_session_length = mean(all_session_lengths) if all_session_lengths else 0.0
 
-    # Subject growth series (from performance rows)
+    # Subject growth series
     per_subject_series: Dict[str, List[Tuple[str, float]]] = {}
     for ap in perf_rows:
         subj = perf_subject(ap, idx) or "Unknown"
         dt = parse_ts(ap.get("submitted_at"))
         if dt:
-            per_subject_series.setdefault(subj, []).append((dt.date().isoformat(), float(ap.get("score") or 0)))
+            score_val = float(ap.get("score")) if ap.get("score") not in (None, "") else (100.0 if ap.get("is_right") else 0.0)
+            per_subject_series.setdefault(subj, []).append((dt.date().isoformat(), score_val))
 
-    # User profile basics
+    # User basics
     dob = user.get("dob", "")
     age_display = compute_age_from_dob(dob)
     gender = user.get("gender", "Unknown")
@@ -308,7 +353,7 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
         "avg_session_length": round(avg_session_length, 1),
         "avg_score": round(avg_score, 1),
         "total_points": round(total_points, 1),
-        "avg_hints_used": round(avg_hints_used, 3),  # 0..1 fraction
+        "avg_hints_used": round(avg_hints_used, 3),
         "dob": dob or "Unknown",
         "age_display": age_display,
         "gender": gender,
@@ -318,6 +363,10 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
         "created_at": user.get("created_at", "Unknown"),
         "updated_at": user.get("updated_at", "Unknown"),
         "avatar": avatar,
+
+        # Extra numeric fields for all-time visuals
+        "chapters_seen": len(cs_for_user),
+        "avg_chapter_progress_val": round(avg_chapter_progress, 1),
 
         # Per-subject time series derived from events
         "subject_series": per_subject_series,
@@ -331,7 +380,7 @@ def aggregate_student(data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
     return aggregated
 
 
-# ---------- Period-based metrics (using REAL keys in your JSON) ----------
+# ---------- Period-based metrics ----------
 def filter_records_by_period(records: List[Dict[str, Any]], start_dt: datetime, end_dt: datetime,
                              ts_keys: List[str]) -> List[Dict[str, Any]]:
     out = []
@@ -346,14 +395,12 @@ def filter_records_by_period(records: List[Dict[str, Any]], start_dt: datetime, 
 
 def period_stats(data: Dict[str, Any], user_id: int,
                  start_dt: datetime, end_dt: datetime) -> Dict[str, Any]:
-    # JSON uses: started_at, completed_at, submitted_at, login_timestamp, created_at
     ts_keys_sessions = ["started_at", "completed_at", "created_at", "timestamp", "date"]
     ts_keys_perf = ["submitted_at"]
     ts_keys_dailies = ["login_timestamp", "created_at", "timestamp", "date"]
 
     idx = build_indexes(data)
 
-    # prepare collections already mapped to the selected user
     topic_sessions_all = [t for t in data.get("topic_session", []) if topic_session_user_id(t, idx) == user_id]
     chapter_sessions_all = [c for c in data.get("chapter_session", []) if chapter_session_user_id(c, idx) == user_id]
     lesson_sessions_all = [l for l in data.get("lesson_session", []) if l.get("user_id") == user_id]
@@ -371,7 +418,6 @@ def period_stats(data: Dict[str, Any], user_id: int,
         any(pick_first_ts(x, ts_keys_perf) for x in perf_all) or \
         any(pick_first_ts(x, ts_keys_dailies) for x in daily_logs_all)
 
-    # Totals and averages
     total_time = sum(get_time_spent(r) for r in topic_sessions) + \
                  sum(get_time_spent(r) for r in chapter_sessions) + \
                  sum(float(r.get("time_spent", 0) or 0) for r in daily_logs) + \
@@ -385,14 +431,11 @@ def period_stats(data: Dict[str, Any], user_id: int,
     sessions_count = len(session_lengths)
     avg_session_len = mean(session_lengths) if session_lengths else 0.0
 
-    # Define "lessons" as topic_sessions, "done" when completion_percent >= 80
     completed = sum(1 for t in topic_sessions if float(t.get("completion_percent") or 0) >= 80)
     total_lessons = len(topic_sessions)
     completion_pct = pct(completed, total_lessons)
 
-    # Active days (unique dates seen across any event)
     day_set = set()
-    # unify helper for dates
     def collect_dates(coll, keys):
         for r in coll:
             ts = pick_first_ts(r, keys)
@@ -405,8 +448,8 @@ def period_stats(data: Dict[str, Any], user_id: int,
     collect_dates(perf_rows, ts_keys_perf)
     active_days = len(day_set)
 
-    # Average score in the period
-    scores = [float(p.get("score") or 0) for p in perf_rows]
+    scores = [float(p.get("score")) if p.get("score") not in (None, "") else (100.0 if p.get("is_right") else 0.0)
+              for p in perf_rows]
     avg_score = mean(scores) if scores else 0.0
 
     return {
@@ -418,7 +461,7 @@ def period_stats(data: Dict[str, Any], user_id: int,
         "lessons_total": total_lessons,
         "completion_pct": round(float(completion_pct), 1),
         "active_days": active_days,
-        "avg_score": round(avg_score, 1)
+        "avg_score": round(float(avg_score), 1)
     }
 
 
@@ -429,7 +472,6 @@ def compute_trend(curr: float, prev: float) -> int:
 
 
 def compute_focus_score(completion_pct: float, avg_session_mins: float) -> int:
-    """Lightweight focus score (0..100) using completion and avg session length."""
     base = 50.0
     base += (completion_pct - 50.0) * 0.4
     base += (avg_session_mins - 10.0) * 1.2
@@ -532,6 +574,235 @@ def build_report(d: Dict[str, Any]) -> str:
     return "\n".join(rep).strip()
 
 
+# ---------- Full pie helper (Plotly) ----------
+def donut_chart(done: int, total: int, title: str):
+    """
+    Full pie (hole=0). Returns a plotly.graph_objects.Figure.
+    """
+    total = int(max(1, total))
+    done = int(max(0, min(done, total)))
+    remaining = total - done
+    labels = ["Done", "Remaining"]
+    values = [done, remaining]
+    colors = ["#2E86AB", "#E5ECF6"]  # professional blue + soft gray
+
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0,                 # full pie
+                sort=False,
+                direction="clockwise",
+                marker=dict(colors=colors, line=dict(color="white", width=1)),
+                textinfo="label+percent",
+                hovertemplate="%{label}: %{value} of " + str(total) + "<extra></extra>",
+            )
+        ]
+    )
+    fig.update_layout(
+        template="plotly_white",
+        height=240,
+        margin=dict(l=10, r=10, t=50, b=10),
+        title=f"{title}\n{done} / {total}",
+        showlegend=False,
+    )
+    return fig
+
+
+# ---------- Mini meter helper (Altair) ----------
+def meter_chart(value: float, max_value: float, title: str, unit: str = "", fmt: str = ".1f") -> alt.Chart:
+    max_value = float(max(1.0, max_value, value))
+    df = pd.DataFrame([{"name": title, "value": float(value)}])
+    bar = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("value:Q", title=None, scale=alt.Scale(domain=[0, max_value])),
+            y=alt.Y("name:N", title=None, axis=None),
+            tooltip=[alt.Tooltip("value:Q", format=fmt)],
+        )
+        .properties(height=60, title=f"{title}: {value:{fmt}}{unit}")
+    )
+    text = bar.mark_text(align="left", dx=3, dy=0).encode(text=alt.Text("value:Q", format=fmt))
+    return bar + text
+
+
+# ---------- Personalisation extraction & charts ----------
+AVATAR_KEYS = ["avatar", "avatar_name", "selected_avatar", "active_avatar", "avatarId", "avatar_id"]
+FONT_KEYS = ["font", "font_name", "selected_font", "text_font"]
+BACKGROUND_KEYS = ["background", "background_name", "background_theme", "bg_theme", "bg", "selected_background"]
+
+
+def _extract_attr(record: Dict[str, Any], candidates: List[str]) -> Optional[str]:
+    # exact match first
+    for k in candidates:
+        if k in record and record[k] not in (None, ""):
+            return str(record[k])
+    # fallback: any key that contains the token
+    for key in record.keys():
+        lk = key.lower()
+        for c in candidates:
+            if c.lower() in lk and record.get(key) not in (None, ""):
+                return str(record[key])
+    return None
+
+
+def collect_personalisation_usage(data: Dict[str, Any], user_id: int,
+                                  start_dt: Optional[datetime],
+                                  end_dt: Optional[datetime]) -> Dict[str, Dict[str, float]]:
+    """Sum time_spent (minutes) by avatar/font/background within an optional period."""
+    idx = build_indexes(data)
+    usage = {"avatar": {}, "font": {}, "background": {}}
+
+    def _within(r: Dict[str, Any], keys: List[str]) -> bool:
+        if not start_dt or not end_dt:
+            return True
+        ts = pick_first_ts(r, keys)
+        return (ts is not None) and (start_dt <= ts <= end_dt)
+
+    def _add(kind: str, label: Optional[str], minutes: float):
+        if not label or minutes <= 0:
+            return
+        usage[kind][label] = usage[kind].get(label, 0.0) + minutes
+
+    # topic_session
+    for r in data.get("topic_session", []):
+        if topic_session_user_id(r, idx) != user_id:
+            continue
+        if not _within(r, ["started_at", "completed_at", "created_at", "timestamp", "date"]):
+            continue
+        mins = get_time_spent(r)
+        _add("avatar", _extract_attr(r, AVATAR_KEYS), mins)
+        _add("font", _extract_attr(r, FONT_KEYS), mins)
+        _add("background", _extract_attr(r, BACKGROUND_KEYS), mins)
+
+    # chapter_session
+    for r in data.get("chapter_session", []):
+        if chapter_session_user_id(r, idx) != user_id:
+            continue
+        if not _within(r, ["started_at", "completed_at", "created_at", "timestamp", "date"]):
+            continue
+        mins = get_time_spent(r)
+        _add("avatar", _extract_attr(r, AVATAR_KEYS), mins)
+        _add("font", _extract_attr(r, FONT_KEYS), mins)
+        _add("background", _extract_attr(r, BACKGROUND_KEYS), mins)
+
+    # lesson_session
+    for r in data.get("lesson_session", []):
+        if r.get("user_id") != user_id:
+            continue
+        if not _within(r, ["created_at", "started_at", "completed_at", "timestamp", "date"]):
+            continue
+        mins = get_time_spent(r)
+        _add("avatar", _extract_attr(r, AVATAR_KEYS), mins)
+        _add("font", _extract_attr(r, FONT_KEYS), mins)
+        _add("background", _extract_attr(r, BACKGROUND_KEYS), mins)
+
+    # daily_activity_log
+    for r in data.get("daily_activity_log", []):
+        if r.get("user_id") != user_id:
+            continue
+        if not _within(r, ["login_timestamp", "created_at", "timestamp", "date"]):
+            continue
+        mins = get_time_spent(r)
+        _add("avatar", _extract_attr(r, AVATAR_KEYS), mins)
+        _add("font", _extract_attr(r, FONT_KEYS), mins)
+        _add("background", _extract_attr(r, BACKGROUND_KEYS), mins)
+
+    # activity_performance (optional time_spent)
+    for r in data.get("activity_performance", []):
+        if perf_user_id(r, idx) != user_id:
+            continue
+        if not _within(r, ["submitted_at"]):
+            continue
+        mins = get_time_spent(r)  # many datasets have 0 here; fine to skip if so
+        _add("avatar", _extract_attr(r, AVATAR_KEYS), mins)
+        _add("font", _extract_attr(r, FONT_KEYS), mins)
+        _add("background", _extract_attr(r, BACKGROUND_KEYS), mins)
+
+    return usage
+
+
+def _usage_df(usage: Dict[str, Dict[str, float]]) -> pd.DataFrame:
+    rows = []
+    for kind, d in usage.items():
+        for name, mins in d.items():
+            rows.append({"type": kind, "name": name, "minutes": round(float(mins), 1)})
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values(["type", "minutes"], ascending=[True, False])
+    return df
+
+
+def _usage_chart(df: pd.DataFrame, kind: str, title_suffix: str) -> alt.Chart:
+    if df.empty:
+        return alt.Chart(pd.DataFrame([{"msg": "No usage"}])).mark_text().encode(text="msg:N")
+    sub = df[df["type"] == kind].copy()
+    if sub.empty:
+        return alt.Chart(pd.DataFrame([{"msg": f"No {kind} usage"}])).mark_text().encode(text="msg:N")
+    # keep top 8 for readability
+    sub = sub.nlargest(8, "minutes")
+    chart = (
+        alt.Chart(sub)
+        .mark_bar()
+        .encode(
+            x=alt.X("minutes:Q", title="Minutes"),
+            y=alt.Y("name:N", sort="-x", title=""),
+            tooltip=["name:N", alt.Tooltip("minutes:Q", format=".1f")],
+        )
+        .properties(height=180, title=f"{kind.title()} usage — {title_suffix}")
+    )
+    return chart
+
+
+def render_personalisation_usage(data: Dict[str, Any], user_id: int,
+                                 start_dt: datetime, end_dt: datetime):
+    st.subheader("🎭 Personalisation usage (Avatar • Font • Background)")
+
+    tabs = st.tabs(["This period", "All time"])
+
+    # Period
+    with tabs[0]:
+        usage_p = collect_personalisation_usage(data, user_id, start_dt, end_dt)
+        df_p = _usage_df(usage_p)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.altair_chart(_usage_chart(df_p, "avatar", "period"), use_container_width=True)
+        with c2:
+            st.altair_chart(_usage_chart(df_p, "font", "period"), use_container_width=True)
+        with c3:
+            st.altair_chart(_usage_chart(df_p, "background", "period"), use_container_width=True)
+
+        if not df_p.empty:
+            st.download_button("Download period personalisation (.csv)",
+                               df_p.to_csv(index=False).encode("utf-8"),
+                               file_name=f"user_{user_id}_personalisation_period.csv",
+                               mime="text/csv")
+        else:
+            st.info("No personalisation usage found in the selected period.")
+
+    # All-time
+    with tabs[1]:
+        usage_all = collect_personalisation_usage(data, user_id, None, None)
+        df_a = _usage_df(usage_all)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.altair_chart(_usage_chart(df_a, "avatar", "all-time"), use_container_width=True)
+        with c2:
+            st.altair_chart(_usage_chart(df_a, "font", "all-time"), use_container_width=True)
+        with c3:
+            st.altair_chart(_usage_chart(df_a, "background", "all-time"), use_container_width=True)
+
+        if not df_a.empty:
+            st.download_button("Download all-time personalisation (.csv)",
+                               df_a.to_csv(index=False).encode("utf-8"),
+                               file_name=f"user_{user_id}_personalisation_alltime.csv",
+                               mime="text/csv")
+        else:
+            st.info("No personalisation usage found in the dataset.")
+
+
 # ---------- Subject charts & logs ----------
 def render_subject_growth(agg: Dict[str, Any]):
     st.subheader("📈 Subject Growth (derived from activity_performance)")
@@ -567,8 +838,10 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
     st.subheader("🧾 Per-event log (joined)")
 
     idx = build_indexes(data)
-
     rows: List[Dict[str, Any]] = []
+
+    def _val(r, keys):
+        return _extract_attr(r, keys) or "—"
 
     # Daily logs
     for r in idx["daily_logs"]:
@@ -580,6 +853,9 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
                 "score": "—",
                 "points": r.get("points_earned", 0),
                 "time_spent": r.get("time_spent", 0),
+                "avatar": _val(r, AVATAR_KEYS),
+                "font": _val(r, FONT_KEYS),
+                "background": _val(r, BACKGROUND_KEYS),
                 "chapter_session_id": "—",
                 "topic_session_id": "—",
                 "device": r.get("device_type", "—"),
@@ -595,6 +871,9 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
                 "score": "—",
                 "points": l.get("points_earned", 0),
                 "time_spent": get_time_spent(l),
+                "avatar": _val(l, AVATAR_KEYS),
+                "font": _val(l, FONT_KEYS),
+                "background": _val(l, BACKGROUND_KEYS),
                 "chapter_session_id": "—",
                 "topic_session_id": "—",
                 "device": l.get("device_type", "—"),
@@ -618,6 +897,9 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
             "score": "—",
             "points": ts.get("points_earned", 0),
             "time_spent": get_time_spent(ts),
+            "avatar": _val(ts, AVATAR_KEYS),
+            "font": _val(ts, FONT_KEYS),
+            "background": _val(ts, BACKGROUND_KEYS),
             "chapter_session_id": "—",
             "topic_session_id": ts.get("topic_session_id"),
             "device": ts.get("device_type", "—"),
@@ -643,6 +925,9 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
             "score": "—",
             "points": cs.get("points_earned", 0),
             "time_spent": get_time_spent(cs),
+            "avatar": _val(cs, AVATAR_KEYS),
+            "font": _val(cs, FONT_KEYS),
+            "background": _val(cs, BACKGROUND_KEYS),
             "chapter_session_id": cs.get("chapter_session_id"),
             "topic_session_id": cs.get("topic_session_id"),
             "device": "—",
@@ -654,13 +939,19 @@ def render_event_log_table(data: Dict[str, Any], user_id: int):
         if uid != user_id:
             continue
         subj = perf_subject(ap, idx) or "—"
+        score_val = ap.get("score", None)
+        if score_val in (None, ""):
+            score_val = 100.0 if ap.get("is_right") else 0.0
         rows.append({
             "event": "activity_attempt",
             "timestamp": ap.get("submitted_at"),
             "subject": subj,
-            "score": ap.get("score", "—"),
+            "score": score_val,
             "points": ap.get("points_earned", 0),
-            "time_spent": "—",
+            "time_spent": ap.get("time_spent", "—"),
+            "avatar": _val(ap, AVATAR_KEYS),
+            "font": _val(ap, FONT_KEYS),
+            "background": _val(ap, BACKGROUND_KEYS),
             "chapter_session_id": ap.get("chapter_session_id"),
             "topic_session_id": "—",
             "device": "—",
@@ -681,13 +972,9 @@ def main():
     st.title("Student Report Generator (from raw events)")
     st.markdown("Type a query like: `give summary about user_id 8 for teacher`.")
 
-    # Inputs
     data_path = st.sidebar.text_input("JSON data path", value=DEFAULT_JSON_PATH)
-
-    # We let the user type query first, so we can set a smart default range later
     query = st.text_input("Query", value="give summary about user_id 8")
 
-    # Load data (once)
     if not Path(data_path).exists():
         st.error(f"JSON file not found at {data_path}")
         return
@@ -697,40 +984,29 @@ def main():
         st.error(f"Failed to load JSON: {e}")
         return
 
-    # Parse user/audience
     user_id, audience = extract_user_id_and_audience(query)
     if user_id is None:
         st.info("Could not extract `user_id` from query. Use syntax like 'user_id 8'.")
-        # Show users present so the user can pick
         users = pd.DataFrame(data.get("user", []))
         if not users.empty:
+            cols = [c for c in ["user_id", "name", "email", "class_level"] if c in users.columns]
             st.write("Users in dataset:")
-            st.table(users[["user_id", "name", "email", "class_level"]])
+            st.table(users[cols])
         return
 
     idx = build_indexes(data)
-
-    # Recommended available date range (full extent of events for this user)
     rec_start, rec_end = available_date_range_for_user(data, user_id, idx)
 
-    # Date inputs (default to recommended range if available, else last 7 days)
     today = date.today()
-    if rec_end:
-        default_end = rec_end.date()
-    else:
-        default_end = today
-    if rec_start:
-        default_start = rec_start.date()
-    else:
-        default_start = default_end - timedelta(days=6)
+    default_end = rec_end.date() if rec_end else today
+    default_start = rec_start.date() if rec_start else (default_end - timedelta(days=6))
 
     st.sidebar.caption("Pick a date range that overlaps your user's events.")
     start_date = st.sidebar.date_input("Report start date", value=default_start)
     end_date = st.sidebar.date_input("Report end date", value=default_end)
 
     if rec_start and rec_end:
-        st.success(f"Recommended date range for user {user_id}: **{rec_start.date()} → {rec_end.date()}** "
-                   f"(covers all their events).")
+        st.success(f"Recommended date range for user {user_id}: **{rec_start.date()} → {rec_end.date()}** (covers all their events).")
 
     if st.button("Run"):
         try:
@@ -739,7 +1015,6 @@ def main():
             st.error(f"Aggregation error: {e}")
             return
 
-        # Per-period snapshot (+ previous period for trend)
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(end_date, datetime.max.time())
         curr = period_stats(data, user_id, start_dt, end_dt)
@@ -754,55 +1029,184 @@ def main():
         # ---- User metadata ----
         display_user_metadata(agg)
 
-        # ---- Engagement & Performance Snapshot ----
-        st.subheader(f"Engagement & Performance Snapshot for {agg['name']} (ID {user_id})")
+        # ============================================================
+        # SNAPSHOT CONTAINER (two stacked rows inside one container)
+        # ============================================================
+        with st.container():
+            st.subheader(f"Engagement & Performance Snapshot for {agg['name']} (ID {user_id})")
 
-        mcol, pcol = st.columns([1, 1])
-        with mcol:
-            st.metric("Average activity score", f"{curr['avg_score']}%")
-            st.metric("Avg session length", f"{curr['avg_session_mins']} mins")
+            # Row 1: Average score — left % text, right pie
+            r1_left, r1_right = st.columns([1, 1])
+            with r1_left:
+                st.metric("Average activity score (period)", f"{curr['avg_score']}%")
+                st.caption(f"Active days: {curr.get('active_days','—')}")
+            with r1_right:
+                score_val = max(0, min(100, float(curr.get("avg_score", 0))))
+                labels = ["Score", "Remaining"]
+                values = [score_val, max(0.0, 100.0 - score_val)]
+                colors = ["#2E86AB", "#E5ECF6"]
+                fig_score = go.Figure(
+                    data=[
+                        go.Pie(
+                            labels=labels,
+                            values=values,
+                            hole=0,  # full pie
+                            sort=False,
+                            direction="clockwise",
+                            marker=dict(colors=colors, line=dict(color="white", width=1)),
+                            textinfo="label+percent",
+                            hovertemplate="%{label}: %{value:.1f}%<extra></extra>",
+                        )
+                    ]
+                )
+                fig_score.update_layout(
+                    template="plotly_white",
+                    height=240,
+                    margin=dict(l=10, r=10, t=50, b=10),
+                    title="Average activity score (period)",
+                    showlegend=False,
+                )
+                st.plotly_chart(fig_score, use_container_width=True)
 
-        with pcol:
-            score_val = max(0, min(100, float(curr.get("avg_score", 0))))
-            pie_df = pd.DataFrame(
-                [{"label": "Score", "value": score_val},
-                 {"label": "Remaining", "value": max(0.0, 100.0 - score_val)}]
+            st.divider()
+
+            # Row 2 (bottom of first container): Completion — left % text, right pie
+            r2_left, r2_right = st.columns([1, 1])
+            with r2_left:
+                st.metric("Lesson completion (period)", f"{curr['completion_pct']}%")
+                st.caption(f"{curr['lessons_done']} / {curr['lessons_total']} topics ≥80%")
+            with r2_right:
+                st.plotly_chart(
+                    donut_chart(curr["lessons_done"], curr["lessons_total"], "Lessons completed (topics ≥80%)"),
+                    use_container_width=True
+                )
+
+                # ----- Period KPI charts -----
+            st.markdown("### Period KPI charts")
+            pc1, pc2 = st.columns(2)
+
+            with pc1:
+                st.plotly_chart(
+                    pie_for_period_kpi("Avg session length (period)", curr["avg_session_mins"], cap=50, unit=" mins"),
+                    use_container_width=True
+                )
+
+            with pc2:
+                st.plotly_chart(
+                    pie_for_period_kpi("Time-on-task (period)", curr["total_time_mins"], cap=100, unit=" mins"),
+                    use_container_width=True
+                )
+
+
+        pc3, pc4 = st.columns(2)
+        with pc3:
+            st.altair_chart(
+                meter_chart(curr["total_time_mins"], max_value=max(120, curr["total_time_mins"] * 1.4),
+                            title="Total time (period)", unit=" mins"),
+                use_container_width=True
             )
-            donut = alt.Chart(pie_df).mark_arc(innerRadius=50).encode(
-                theta=alt.Theta("value:Q"),
-                color=alt.Color("label:N", legend=None),
-                tooltip=["label:N", alt.Tooltip("value:Q", format=".1f")]
-            ).properties(height=160, width=160, title="Average activity score (period)")
-            st.altair_chart(donut, use_container_width=False)
+        with pc4:
+            st.altair_chart(
+                meter_chart(curr["sessions"], max_value=max(10, curr["sessions"] * 1.4),
+                            title="Sessions counted (period)"),
+                use_container_width=True
+            )
 
+        # KPI recap
         c1, c2, c3 = st.columns(3)
-        c1.write(f"**Lessons completed (topics ≥80%):** {curr['lessons_done']} / {curr['lessons_total']} "
-                 f"({curr['completion_pct']}%)")
+        c1.write(f"**Lessons completed:** {curr['lessons_done']} / {curr['lessons_total']} ({curr['completion_pct']}%)")
         c2.write(f"**Total time:** {curr['total_time_mins']} minutes")
         c3.write(f"**Sessions counted:** {curr['sessions']}")
         st.write(f"**All-time points:** {agg['total_points']} | **All-time avg session:** {agg['avg_session_length']} mins")
-        st.write(f"**All-time chapter progress:** {agg['chapter_progress_summary']}")
-        st.write(f"**Hints usage (all-time):** {agg['avg_hints_used']} of attempts used a hint (0..1)")
+        st.write(f"**All-time chapter progress:** {agg['chapters_seen']} chapters seen, average progress {agg['avg_chapter_progress_val']}%")
+        st.write(f"**All-time hints usage:** {agg['avg_hints_used']} of attempts used a hint (0..1)")
 
-        # ---- Subject charts (from performance history) ----
+                # ---------- All-time KPI charts ----------
+        st.markdown("### All-time KPI charts")
+
+        # Top number tiles (keep)
+        t1, t2, t3, t4 = st.columns(4)
+        t1.metric("All-time points", f"{agg['total_points']:.1f}")
+        t2.metric("All-time avg session", f"{agg['avg_session_length']:.1f} mins")
+        t3.metric(f"Avg chapter progress ({agg['chapters_seen']} seen)", f"{agg['avg_chapter_progress_val']:.1f} %")
+        t4.metric("Hints usage (all-time)", f"{agg['avg_hints_used']*100:.1f} %")
+
+        # Combined vertical bar chart with 4 bars
+        labels = [
+            "All-time points",
+            "All-time avg session (mins)",
+            f"Avg chapter progress ({agg['chapters_seen']} seen) (%)",
+            "Hints usage (all-time) (%)",
+        ]
+        values = [
+            float(agg["total_points"]),
+            float(agg["avg_session_length"]),
+            float(agg["avg_chapter_progress_val"]),
+            float(agg["avg_hints_used"] * 100.0),
+        ]
+        units = ["", " mins", " %", " %"]
+        colors = ["#2E86AB", "#6AA84F", "#FF8C42", "#B35C9E"]
+        texts = [f"{v:.1f}{u}" if u else f"{v:.1f}" for v, u in zip(values, units)]
+
+        fig_kpi = go.Figure(
+            data=[
+                go.Bar(
+                    x=labels,
+                    y=values,
+                    marker_color=colors,
+                    text=texts,
+                    textposition="outside",   # show values above bars
+                    cliponaxis=False,         # allow text to sit outside plot
+                    hovertemplate="%{x}: %{y:.1f}%{customdata}<extra></extra>",
+                    customdata=units,
+                )
+            ]
+        )
+        fig_kpi.update_layout(
+            template="plotly_white",
+            height=420,
+            margin=dict(l=10, r=10, t=10, b=10),
+            xaxis_title="",
+            yaxis_title="",
+            xaxis=dict(tickangle=-10, categoryorder="array", categoryarray=labels),
+            yaxis=dict(showgrid=True, zeroline=True, rangemode="tozero"),
+            uniformtext_minsize=10,
+            uniformtext_mode="show",
+            showlegend=False,
+        )
+        st.plotly_chart(fig_kpi, use_container_width=True)
+
+        # CSV download (unchanged)
+        kpi_df = pd.DataFrame([
+            {"metric": "All-time points", "value": agg["total_points"], "unit": ""},
+            {"metric": "All-time avg session", "value": agg["avg_session_length"], "unit": "mins"},
+            {"metric": f"Avg chapter progress ({agg['chapters_seen']} seen)", "value": agg["avg_chapter_progress_val"], "unit": "%"},
+            {"metric": "Hints usage (all-time)", "value": agg["avg_hints_used"] * 100.0, "unit": "%"},
+        ])
+        st.download_button("Download all-time KPIs (.csv)",
+                           kpi_df.to_csv(index=False).encode("utf-8"),
+                           file_name=f"user_{user_id}_alltime_kpis.csv",
+                           mime="text/csv")
+
+        # ---- Subject charts ----
         render_subject_growth(agg)
 
-        # ---------- SEN Report (period-based) ----------
+        # ---------- Personalisation usage (above SEN Report) ----------
+        render_personalisation_usage(data, user_id, start_dt, end_dt)
+
+        # ---------- SEN Report ----------
         st.subheader("🧾 SEN Report (auto-generated)")
         if not curr["had_ts"]:
-            st.warning("No reliable timestamps found **in your selected range**. "
-                       "Use the recommended range above for complete figures.")
+            st.warning("No reliable timestamps found **in your selected range**. Use the recommended range above for complete figures.")
 
-        # Focus score & deltas
         focus_score_now = compute_focus_score(curr["completion_pct"], curr["avg_session_mins"])
         focus_score_prev = compute_focus_score(prev["completion_pct"], prev["avg_session_mins"])
         focus_delta = focus_score_now - focus_score_prev
 
-        # Simple “skills” summary derived from subjects: current period average by subject (delta vs previous)
         subject_to_scores_curr: Dict[str, List[float]] = {}
         subject_to_scores_prev: Dict[str, List[float]] = {}
-        # Build per-subject from performance rows on-the-fly
         idx_local = build_indexes(data)
+
         def perf_rows_in_range(start_dt, end_dt):
             rows = []
             for ap in data.get("activity_performance", []):
@@ -819,7 +1223,8 @@ def main():
         for row, bucket in [(prs_curr, subject_to_scores_curr), (prs_prev, subject_to_scores_prev)]:
             for ap in row:
                 subj = perf_subject(ap, idx_local) or "Unknown"
-                bucket.setdefault(subj, []).append(float(ap.get("score") or 0))
+                score_val = float(ap.get("score")) if ap.get("score") not in (None, "") else (100.0 if ap.get("is_right") else 0.0)
+                bucket.setdefault(subj, []).append(score_val)
 
         skills = []
         for subj, vals in subject_to_scores_curr.items():
@@ -827,7 +1232,6 @@ def main():
             v_prev = mean(subject_to_scores_prev.get(subj, [])) if subject_to_scores_prev.get(subj) else 0.0
             skills.append({"name": subj, "value": v_now/100.0, "delta": (v_now - v_prev)/100.0})
 
-        # Routine risk (simple rule-of-thumb)
         dropoff_risk = "high" if (curr["active_days"] <= 2 or curr["completion_pct"] < 30) else ("medium" if curr["completion_pct"] < 60 else "low")
 
         report_data = {
@@ -886,7 +1290,7 @@ def main():
             mime="text/plain"
         )
 
-        # Joined event log (so you can see exactly what's driving the metrics)
+        # Joined event log
         render_event_log_table(data, user_id)
 
 

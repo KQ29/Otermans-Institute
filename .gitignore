@@ -21,3 +21,7 @@ extended_dummy_data.json
 student_fake_data.json
 
 fake_data.json
+
+.DS_Store
+
+four_students.json
