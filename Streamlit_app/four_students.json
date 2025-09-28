@@ -1,0 +1,590 @@
+[
+    {
+        "user": [
+            {
+                "user_id": 1,
+                "email": "romerodouglas@example.com",
+                "name": "Thomas Mccoy",
+                "age": 8,
+                "parental_email": "jonesjoshua@example.org",
+                "password_hashed": "bacce38e3ec12a65a33942a24d3245e4343cc29409472023c0e91c9994966da1",
+                "created_at": "2024-12-07T21:19:46",
+                "updated_at": "2024-12-22T05:06:20",
+                "dob": "2016-11-04",
+                "gender": "female",
+                "class_level": "KS1",
+                "school_name": "Oliver, Montoya and Gray",
+                "reading_level": "Intermediate"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 11,
+                "enrolled_at": "2024-12-29T00:48:34",
+                "user_id": 1,
+                "topic_id": 11,
+                "is_completed": true,
+                "have_certificate": true
+            },
+            {
+                "enrollment_id": 12,
+                "enrolled_at": "2025-06-09T09:15:57",
+                "user_id": 1,
+                "topic_id": 12,
+                "is_completed": false,
+                "have_certificate": true
+            },
+            {
+                "enrollment_id": 13,
+                "enrolled_at": "2025-07-27T04:32:46",
+                "user_id": 1,
+                "topic_id": 13,
+                "is_completed": true,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 11,
+                "user_id": 1,
+                "login_timestamp": "2024-06-16T12:42:37",
+                "time_spent": 39.41,
+                "points_earned": 11,
+                "activities_completed": 5
+            },
+            {
+                "log_id": 12,
+                "user_id": 1,
+                "login_timestamp": "2024-08-23T01:33:50",
+                "time_spent": 65.3,
+                "points_earned": 6,
+                "activities_completed": 14
+            },
+            {
+                "log_id": 13,
+                "user_id": 1,
+                "login_timestamp": "2025-03-04T07:01:50",
+                "time_spent": 37.75,
+                "points_earned": 15,
+                "activities_completed": 13
+            },
+            {
+                "log_id": 14,
+                "user_id": 1,
+                "login_timestamp": "2025-08-21T14:57:44",
+                "time_spent": 83.39,
+                "points_earned": 12,
+                "activities_completed": 15
+            },
+            {
+                "log_id": 15,
+                "user_id": 1,
+                "login_timestamp": "2025-08-29T18:02:06",
+                "time_spent": 78.63,
+                "points_earned": 6,
+                "activities_completed": 12
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 11,
+                "enrollment_id": 11,
+                "started_at": "2024-04-13T12:09:49",
+                "total_time_spent": 51.48,
+                "device_type": "tablet",
+                "completed_at": "2025-03-19T05:59:10",
+                "completion_percent": 93.07,
+                "geo_location": "Port Mary"
+            },
+            {
+                "topic_session_id": 12,
+                "enrollment_id": 12,
+                "started_at": "2024-01-22T17:18:49",
+                "total_time_spent": 41.41,
+                "device_type": "tablet",
+                "completed_at": "2024-10-21T05:55:33",
+                "completion_percent": 94.8,
+                "geo_location": "West Nicholas"
+            },
+            {
+                "topic_session_id": 13,
+                "enrollment_id": 13,
+                "started_at": "2025-12-12T23:17:12",
+                "total_time_spent": 81.05,
+                "device_type": "tablet",
+                "completed_at": "2025-08-20T02:44:00",
+                "completion_percent": 77.39,
+                "geo_location": "Holthaven"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 11,
+                "topic_session_id": 11,
+                "section_content_id": 11,
+                "time_spent": 86.29,
+                "progress_percent": 80.64,
+                "replay_count": 0,
+                "points_earned": 8,
+                "skipped_content": false,
+                "started_at": "2025-10-18T01:44:27",
+                "completed_at": "2024-08-09T13:22:23"
+            },
+            {
+                "chapter_session_id": 12,
+                "topic_session_id": 12,
+                "section_content_id": 12,
+                "time_spent": 43.18,
+                "progress_percent": 99.84,
+                "replay_count": 2,
+                "points_earned": 5,
+                "skipped_content": false,
+                "started_at": "2025-05-07T23:50:14",
+                "completed_at": "2025-10-25T13:24:02"
+            },
+            {
+                "chapter_session_id": 13,
+                "topic_session_id": 13,
+                "section_content_id": 13,
+                "time_spent": 69.96,
+                "progress_percent": 82.6,
+                "replay_count": 0,
+                "points_earned": 10,
+                "skipped_content": false,
+                "started_at": "2024-04-17T08:55:01",
+                "completed_at": "2025-12-18T05:06:45"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 11,
+                "chapter_session_id": 11,
+                "activity_id": "fe5fe64e-3ea9-4a7d-8948-0d59a9c51315",
+                "activity_type": "mcq",
+                "user_answer": "relationship",
+                "input_method": "mic",
+                "attempts": 1,
+                "is_right": true,
+                "submitted_at": "2025-01-13T08:22:17",
+                "activity_skip": false,
+                "time_spent": 66.75,
+                "used_hint": false,
+                "points_earned": 10
+            },
+            {
+                "performance_id": 12,
+                "chapter_session_id": 12,
+                "activity_id": "c97b1bc2-4966-4ea6-a7c0-adcd5e258ea7",
+                "activity_type": "mcq",
+                "user_answer": "body",
+                "input_method": "touch",
+                "attempts": 2,
+                "is_right": true,
+                "submitted_at": "2024-08-05T07:38:35",
+                "activity_skip": false,
+                "time_spent": 49.4,
+                "used_hint": false,
+                "points_earned": 13
+            },
+            {
+                "performance_id": 13,
+                "chapter_session_id": 13,
+                "activity_id": "ccc0d9c5-f89e-480c-9270-5df1a25048eb",
+                "activity_type": "mcq",
+                "user_answer": "herself",
+                "input_method": "mic",
+                "attempts": 2,
+                "is_right": true,
+                "submitted_at": "2025-07-25T21:24:23",
+                "activity_skip": false,
+                "time_spent": 84.87,
+                "used_hint": false,
+                "points_earned": 14
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 2,
+                "email": "ffitzpatrick@example.com",
+                "name": "Brent Dominguez Jr.",
+                "age": 8,
+                "parental_email": "jenniferlong@example.net",
+                "password_hashed": "3ee8246bbd3d0c60521a9ac7b64e569457ea6e4940d84f2197d0e9a4a3be46bd",
+                "created_at": "2025-11-19T06:13:29",
+                "updated_at": "2024-12-29T01:16:35",
+                "dob": "2018-09-01",
+                "gender": "female",
+                "class_level": "KS2",
+                "school_name": "Hall Group",
+                "reading_level": "Advanced"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 21,
+                "enrolled_at": "2024-06-20T16:25:38",
+                "user_id": 2,
+                "topic_id": 21,
+                "is_completed": true,
+                "have_certificate": true
+            },
+            {
+                "enrollment_id": 22,
+                "enrolled_at": "2024-02-16T03:06:38",
+                "user_id": 2,
+                "topic_id": 22,
+                "is_completed": true,
+                "have_certificate": false
+            },
+            {
+                "enrollment_id": 23,
+                "enrolled_at": "2025-04-23T03:03:13",
+                "user_id": 2,
+                "topic_id": 23,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 21,
+                "user_id": 2,
+                "login_timestamp": "2025-04-30T07:01:56",
+                "time_spent": 33.75,
+                "points_earned": 11,
+                "activities_completed": 5
+            },
+            {
+                "log_id": 22,
+                "user_id": 2,
+                "login_timestamp": "2025-05-23T09:32:11",
+                "time_spent": 64.8,
+                "points_earned": 5,
+                "activities_completed": 6
+            },
+            {
+                "log_id": 23,
+                "user_id": 2,
+                "login_timestamp": "2025-07-15T04:40:36",
+                "time_spent": 63.13,
+                "points_earned": 14,
+                "activities_completed": 8
+            },
+            {
+                "log_id": 24,
+                "user_id": 2,
+                "login_timestamp": "2024-04-07T00:34:49",
+                "time_spent": 50.41,
+                "points_earned": 8,
+                "activities_completed": 10
+            },
+            {
+                "log_id": 25,
+                "user_id": 2,
+                "login_timestamp": "2025-05-20T00:29:33",
+                "time_spent": 61.01,
+                "points_earned": 7,
+                "activities_completed": 11
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 21,
+                "enrollment_id": 21,
+                "started_at": "2024-05-31T05:37:10",
+                "total_time_spent": 89.96,
+                "device_type": "tablet",
+                "completed_at": "2025-11-30T11:35:04",
+                "completion_percent": 76.61,
+                "geo_location": "Velasquezport"
+            },
+            {
+                "topic_session_id": 22,
+                "enrollment_id": 22,
+                "started_at": "2025-06-05T16:18:43",
+                "total_time_spent": 37.84,
+                "device_type": "tablet",
+                "completed_at": "2025-11-23T02:00:13",
+                "completion_percent": 99.06,
+                "geo_location": "East Alison"
+            },
+            {
+                "topic_session_id": 23,
+                "enrollment_id": 23,
+                "started_at": "2024-04-04T02:49:03",
+                "total_time_spent": 37.77,
+                "device_type": "mobile",
+                "completed_at": "2025-06-28T18:58:29",
+                "completion_percent": 71.47,
+                "geo_location": "Barrettfurt"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 21,
+                "topic_session_id": 21,
+                "section_content_id": 21,
+                "time_spent": 41.88,
+                "progress_percent": 91.96,
+                "replay_count": 2,
+                "points_earned": 14,
+                "skipped_content": false,
+                "started_at": "2024-10-30T15:38:58",
+                "completed_at": "2024-09-14T18:34:21"
+            },
+            {
+                "chapter_session_id": 22,
+                "topic_session_id": 22,
+                "section_content_id": 22,
+                "time_spent": 87.36,
+                "progress_percent": 95.54,
+                "replay_count": 2,
+                "points_earned": 13,
+                "skipped_content": false,
+                "started_at": "2024-03-11T13:07:04",
+                "completed_at": "2024-11-05T01:02:08"
+            },
+            {
+                "chapter_session_id": 23,
+                "topic_session_id": 23,
+                "section_content_id": 23,
+                "time_spent": 40.35,
+                "progress_percent": 86.64,
+                "replay_count": 2,
+                "points_earned": 11,
+                "skipped_content": false,
+                "started_at": "2024-01-05T13:33:46",
+                "completed_at": "2025-01-27T11:48:23"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 21,
+                "chapter_session_id": 21,
+                "activity_id": "9163b358-d86b-4f90-882b-926dd6da9572",
+                "activity_type": "open_question",
+                "user_answer": "speech",
+                "input_method": "mic",
+                "attempts": 1,
+                "is_right": true,
+                "submitted_at": "2024-11-12T14:43:58",
+                "activity_skip": false,
+                "time_spent": 45.72,
+                "used_hint": false,
+                "points_earned": 14
+            },
+            {
+                "performance_id": 22,
+                "chapter_session_id": 22,
+                "activity_id": "0b37d0a6-3610-4384-9f74-2d080e36c00d",
+                "activity_type": "open_question",
+                "user_answer": "else",
+                "input_method": "mic",
+                "attempts": 2,
+                "is_right": true,
+                "submitted_at": "2024-11-03T22:32:43",
+                "activity_skip": false,
+                "time_spent": 79.97,
+                "used_hint": false,
+                "points_earned": 10
+            },
+            {
+                "performance_id": 23,
+                "chapter_session_id": 23,
+                "activity_id": "eb910916-51f7-4b3c-87f4-db320153ee5a",
+                "activity_type": "open_question",
+                "user_answer": "quality",
+                "input_method": "mic",
+                "attempts": 2,
+                "is_right": true,
+                "submitted_at": "2024-09-27T05:03:38",
+                "activity_skip": false,
+                "time_spent": 54.46,
+                "used_hint": false,
+                "points_earned": 7
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 3,
+                "email": "walter94@example.com",
+                "name": "Casey Morris",
+                "age": 8,
+                "parental_email": "whitneywhite@example.com",
+                "password_hashed": "baf1d4763eaee31480b7ef77d486b297f15711d3467d4da50e42a3bbacf4cf85",
+                "created_at": "2024-05-05T07:39:13",
+                "updated_at": "2025-07-09T13:06:17",
+                "dob": "2013-10-10",
+                "gender": "male",
+                "class_level": "KS2",
+                "school_name": "Mcknight, Hopkins and Mitchell",
+                "reading_level": "Advanced"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 31,
+                "enrolled_at": "2025-06-14T21:57:54",
+                "user_id": 3,
+                "topic_id": 31,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 31,
+                "user_id": 3,
+                "login_timestamp": "2024-09-12T10:38:13",
+                "time_spent": 4.39,
+                "points_earned": 0,
+                "activities_completed": 1
+            },
+            {
+                "log_id": 32,
+                "user_id": 3,
+                "login_timestamp": "2024-06-14T07:39:32",
+                "time_spent": 4.55,
+                "points_earned": 3,
+                "activities_completed": 2
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 31,
+                "enrollment_id": 31,
+                "started_at": "2024-08-02T04:58:56",
+                "total_time_spent": 1.66,
+                "device_type": "tablet",
+                "completed_at": "2025-11-08T15:31:02",
+                "completion_percent": 8.42,
+                "geo_location": "Hernandezton"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 31,
+                "topic_session_id": 31,
+                "section_content_id": 31,
+                "time_spent": 0.59,
+                "progress_percent": 11.72,
+                "replay_count": 2,
+                "points_earned": 3,
+                "skipped_content": true,
+                "started_at": "2024-03-12T09:39:19",
+                "completed_at": "2025-01-23T17:53:06"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 31,
+                "chapter_session_id": 31,
+                "activity_id": "cdccaf42-b49b-4498-b489-f0f8e0543c41",
+                "activity_type": "mcq",
+                "user_answer": "interest",
+                "input_method": "keyboard",
+                "attempts": 2,
+                "is_right": false,
+                "submitted_at": "2025-12-28T08:24:52",
+                "activity_skip": true,
+                "time_spent": 2.66,
+                "used_hint": true,
+                "points_earned": 2
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 4,
+                "email": "christopherwilliams@example.com",
+                "name": "Jessica Diaz",
+                "age": 9,
+                "parental_email": "ihall@example.net",
+                "password_hashed": "14dec6ec1e81e4cd6d7c561c12a545cc07741a2ec4646a62dbfc7bcb57ee3306",
+                "created_at": "2025-04-06T19:38:42",
+                "updated_at": "2024-06-17T18:50:32",
+                "dob": "2017-08-12",
+                "gender": "female",
+                "class_level": "KS2",
+                "school_name": "Harvey-Walker",
+                "reading_level": "Beginner"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 41,
+                "enrolled_at": "2024-11-10T19:24:21",
+                "user_id": 4,
+                "topic_id": 41,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 41,
+                "user_id": 4,
+                "login_timestamp": "2025-04-20T04:39:19",
+                "time_spent": 2.55,
+                "points_earned": 0,
+                "activities_completed": 2
+            },
+            {
+                "log_id": 42,
+                "user_id": 4,
+                "login_timestamp": "2025-08-31T08:54:43",
+                "time_spent": 3.27,
+                "points_earned": 3,
+                "activities_completed": 2
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 41,
+                "enrollment_id": 41,
+                "started_at": "2025-11-28T11:35:19",
+                "total_time_spent": 3.76,
+                "device_type": "tablet",
+                "completed_at": "2024-11-06T23:46:26",
+                "completion_percent": 26.94,
+                "geo_location": "Lake Brenda"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 41,
+                "topic_session_id": 41,
+                "section_content_id": 41,
+                "time_spent": 1.65,
+                "progress_percent": 5.32,
+                "replay_count": 2,
+                "points_earned": 1,
+                "skipped_content": true,
+                "started_at": "2024-04-01T09:32:00",
+                "completed_at": "2025-10-23T23:31:10"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 41,
+                "chapter_session_id": 41,
+                "activity_id": "a3430273-90d7-420a-bb47-f132e406caa6",
+                "activity_type": "mcq",
+                "user_answer": "campaign",
+                "input_method": "touch",
+                "attempts": 1,
+                "is_right": false,
+                "submitted_at": "2025-02-02T12:41:25",
+                "activity_skip": true,
+                "time_spent": 0.88,
+                "used_hint": true,
+                "points_earned": 1
+            }
+        ]
+    }
+]

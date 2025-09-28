@@ -20,13 +20,11 @@ dummy_data_full.json
 
 extended_dummy_data.json
 
+complete_dummy_data.json
+
 student_fake_data.json
 
-fake_data.json
-
 .DS_Store
-
-four_students.json
 
 streamlit_app_1.py
 
@@ -42,6 +40,5 @@ streamlit_app_1.py
 __pycache__/
 **/__pycache__/
 
-*.json
 .DS_Store
 .env

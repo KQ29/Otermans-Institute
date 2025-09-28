@@ -1,0 +1,2312 @@
+[
+    {
+        "user": [
+            {
+                "user_id": 1,
+                "email": "ihurst@example.com",
+                "name": "Sharon Bryant",
+                "age": 15,
+                "parental_email": "shenry@example.net",
+                "password_hashed": "13d0322c51f9536926963504b04ac6a9cf75ea8b0dc0d2f34f81e47418d7330e",
+                "created_at": "2025-01-29T03:52:03",
+                "updated_at": "2024-05-30T05:51:19",
+                "dob": "2018-05-30",
+                "gender": "male",
+                "class_level": "KS2",
+                "school_name": "Esparza, Parks and Reyes",
+                "reading_level": "Advanced"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 1,
+                "enrolled_at": "2025-06-21T01:13:36",
+                "user_id": 1,
+                "topic_id": 1,
+                "is_completed": true,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 1,
+                "user_id": 1,
+                "login_timestamp": "2025-08-15T06:22:57",
+                "time_spent": 36.93,
+                "points_earned": 5,
+                "activities_completed": 13
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 1,
+                "enrollment_id": 1,
+                "started_at": "2025-11-05T07:20:17",
+                "total_time_spent": 14.52,
+                "device_type": "desktop",
+                "completed_at": "2025-04-03T04:16:54",
+                "completion_percent": 43.95,
+                "geo_location": "South Amandaview"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 1,
+                "topic_session_id": 1,
+                "section_content_id": 1,
+                "time_spent": 6.04,
+                "progress_percent": 6.37,
+                "replay_count": 2,
+                "points_earned": 0,
+                "skipped_content": true,
+                "started_at": "2024-05-01T19:19:46",
+                "completed_at": "2025-06-07T04:44:26"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 1,
+                "chapter_session_id": 1,
+                "activity_id": "5f128d00-a3c2-4035-9e55-7901252fd555",
+                "activity_type": "mcq",
+                "user_answer": "capital",
+                "input_method": "keyboard",
+                "attempts": 1,
+                "is_right": false,
+                "submitted_at": "2025-04-24T16:17:50",
+                "activity_skip": false,
+                "time_spent": 4.24,
+                "used_hint": true,
+                "points_earned": 5
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 1,
+                "user_id": 1,
+                "topic_id": 1,
+                "api_heading_id": 21,
+                "section_index": 38,
+                "title": "save",
+                "device_type": "tablet",
+                "created_at": "2024-08-25T08:46:25"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 1,
+                "user_id": 1,
+                "title": "two",
+                "subject": "history",
+                "duration": 38,
+                "class_level": "middle",
+                "created_at": "2024-02-07T08:44:59"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 1,
+                "chapter_session_id": 1,
+                "avatar_name": "Cheryl",
+                "clothes_set": "wrong",
+                "time_spent": 4.76,
+                "accessory": "sort",
+                "selected_at": "2025-12-17T04:08:25"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 1,
+                "chapter_session_id": 1,
+                "font_size": 4,
+                "font_style": "normal",
+                "selected_at": "2025-06-17T19:26:12"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 1,
+                "chapter_session_id": 1,
+                "time_spent": 4.82,
+                "background_option": "first",
+                "selected_at": "2024-07-14T08:09:33"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 1,
+                "chapter_session_id": 1,
+                "ai_response": "Cover behind keep simple spring heavy consider.",
+                "input_method": "touch",
+                "time_spent": 4.77,
+                "user_message": "Seven writer change hospital million those ever hour.",
+                "selected_at": "2024-08-16T23:47:25"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 1,
+                "topic_id": 1,
+                "user_id": 1,
+                "title": "this",
+                "image_path": "specific",
+                "section_index": 21,
+                "api_heading_id": "maintain",
+                "created_at": "2024-12-24T00:36:26",
+                "updated_at": "2025-10-04T04:21:38",
+                "deleted_at": "2025-03-15T03:54:16",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 1,
+                "lesson_section_id": 1,
+                "reading_level": "Intermediate",
+                "paragraph_delta_json": "Own statement word security form station movement. Black become receive. Clear how vote here process top ever. Campaign beyond own our condition window structure.",
+                "api_grade_level": "develop",
+                "api_reading_level": "some",
+                "created_at": "2024-08-20T07:18:50",
+                "updated_at": "2025-06-16T09:34:54",
+                "deleted_at": "2024-07-13T20:32:28"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 1,
+                "section_content_id": 1,
+                "question": "Realize world reflect choose suffer cut force.",
+                "image_path": "current",
+                "correct_option_ui_id": "team",
+                "created_at": "2024-12-17T11:11:05",
+                "updated_at": "2024-02-07T02:24:18",
+                "deleted_at": "2024-02-08T17:22:42"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 1,
+                "mcq_id": 1,
+                "text_value": "information",
+                "created_at": "2024-12-11T23:38:27",
+                "updated_at": "2025-03-30T21:32:44",
+                "deleted_at": "2025-06-05T17:56:12"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 1,
+                "mcq_id": 1,
+                "chapter_session_id": 1,
+                "click_count": 5,
+                "image_path": "police",
+                "last_click": "2024-05-22T06:40:29",
+                "created_at": "2024-10-23T02:26:47",
+                "updated_at": "2025-07-20T06:13:02",
+                "deleted_at": "2025-07-16T14:03:36"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 1,
+                "section_content_id": 1,
+                "question": "Opportunity art ago perhaps training bring.",
+                "hint": "blood",
+                "answer": "forward",
+                "created_at": "2024-03-21T02:18:18",
+                "updated_at": "2024-04-18T18:20:41",
+                "deleted_at": "2024-12-08T16:23:46"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 1,
+                "chapter_session_id": 1,
+                "click_count": 4,
+                "image_path": "different",
+                "last_click": "2025-11-22T18:35:36",
+                "created_at": "2024-09-04T09:24:52",
+                "updated_at": "2025-06-25T03:09:16"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 2,
+                "email": "arodriguez@example.org",
+                "name": "Joseph Peterson",
+                "age": 15,
+                "parental_email": "fevans@example.net",
+                "password_hashed": "ac2901c649a657334ae377ba52aa2c61532bd672a6b4462ef24fd6bbbecc3908",
+                "created_at": "2025-11-17T11:01:09",
+                "updated_at": "2024-12-26T06:31:12",
+                "dob": "2012-07-02",
+                "gender": "female",
+                "class_level": "KS2",
+                "school_name": "Hines, Davidson and Chavez",
+                "reading_level": "Intermediate"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 2,
+                "enrolled_at": "2025-04-01T10:52:06",
+                "user_id": 2,
+                "topic_id": 2,
+                "is_completed": true,
+                "have_certificate": true
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 2,
+                "user_id": 2,
+                "login_timestamp": "2025-11-22T18:09:38",
+                "time_spent": 55.45,
+                "points_earned": 7,
+                "activities_completed": 12
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 2,
+                "enrollment_id": 2,
+                "started_at": "2024-10-19T13:07:12",
+                "total_time_spent": 17.4,
+                "device_type": "mobile",
+                "completed_at": "2024-11-20T12:03:15",
+                "completion_percent": 40.15,
+                "geo_location": "New Christina"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 2,
+                "topic_session_id": 2,
+                "section_content_id": 2,
+                "time_spent": 2.06,
+                "progress_percent": 47.89,
+                "replay_count": 1,
+                "points_earned": 1,
+                "skipped_content": true,
+                "started_at": "2024-01-30T05:09:27",
+                "completed_at": "2025-02-21T02:58:42"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 2,
+                "chapter_session_id": 2,
+                "activity_id": "bdc52b4f-2722-4b5e-a696-c04f76cb0f48",
+                "activity_type": "open_question",
+                "user_answer": "wife",
+                "input_method": "touch",
+                "attempts": 1,
+                "is_right": false,
+                "submitted_at": "2025-09-17T22:24:41",
+                "activity_skip": false,
+                "time_spent": 2.11,
+                "used_hint": false,
+                "points_earned": 4
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 2,
+                "user_id": 2,
+                "topic_id": 2,
+                "api_heading_id": 17,
+                "section_index": 11,
+                "title": "help",
+                "device_type": "mobile",
+                "created_at": "2025-10-03T14:42:37"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 2,
+                "user_id": 2,
+                "title": "top",
+                "subject": "science",
+                "duration": 75,
+                "class_level": "higher",
+                "created_at": "2025-04-21T00:43:53"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 2,
+                "chapter_session_id": 2,
+                "avatar_name": "Melissa",
+                "clothes_set": "future",
+                "time_spent": 6.77,
+                "accessory": "name",
+                "selected_at": "2024-05-21T09:11:18"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 2,
+                "chapter_session_id": 2,
+                "font_size": 10,
+                "font_style": "normal",
+                "selected_at": "2025-08-22T23:42:43"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 2,
+                "chapter_session_id": 2,
+                "time_spent": 4.69,
+                "background_option": "different",
+                "selected_at": "2024-11-21T00:34:23"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 2,
+                "chapter_session_id": 2,
+                "ai_response": "Relationship someone back example guy science book.",
+                "input_method": "keyboard",
+                "time_spent": 2.57,
+                "user_message": "Price who reflect dinner attorney their rather.",
+                "selected_at": "2025-07-02T16:25:17"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 2,
+                "topic_id": 2,
+                "user_id": 2,
+                "title": "popular",
+                "image_path": "newspaper",
+                "section_index": 67,
+                "api_heading_id": "according",
+                "created_at": "2024-05-15T15:14:07",
+                "updated_at": "2024-02-13T07:48:42",
+                "deleted_at": "2024-01-18T21:12:58",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 2,
+                "lesson_section_id": 2,
+                "reading_level": "Intermediate",
+                "paragraph_delta_json": "Claim chance help happen. Pull keep contain particularly.\nPolice hear indicate likely we around create watch. Hotel against build charge majority chair story.",
+                "api_grade_level": "more",
+                "api_reading_level": "pressure",
+                "created_at": "2025-12-27T07:45:32",
+                "updated_at": "2025-04-01T02:07:23",
+                "deleted_at": "2025-05-03T10:46:27"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 2,
+                "section_content_id": 2,
+                "question": "Few blood rock both direction appear.",
+                "image_path": "establish",
+                "correct_option_ui_id": "last",
+                "created_at": "2025-01-10T17:11:10",
+                "updated_at": "2025-09-30T21:54:14",
+                "deleted_at": "2025-06-03T18:57:11"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 2,
+                "mcq_id": 2,
+                "text_value": "need",
+                "created_at": "2025-12-16T05:00:13",
+                "updated_at": "2025-03-31T09:59:17",
+                "deleted_at": "2025-10-10T02:40:00"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 2,
+                "mcq_id": 2,
+                "chapter_session_id": 2,
+                "click_count": 3,
+                "image_path": "bank",
+                "last_click": "2025-05-29T14:12:10",
+                "created_at": "2025-06-18T04:40:43",
+                "updated_at": "2024-08-06T16:06:29",
+                "deleted_at": "2024-02-04T02:52:39"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 2,
+                "section_content_id": 2,
+                "question": "Expert edge body garden her.",
+                "hint": "smile",
+                "answer": "break",
+                "created_at": "2024-07-27T07:52:47",
+                "updated_at": "2024-02-15T04:04:14",
+                "deleted_at": "2025-11-16T10:05:28"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 2,
+                "chapter_session_id": 2,
+                "click_count": 2,
+                "image_path": "including",
+                "last_click": "2024-11-05T05:40:04",
+                "created_at": "2025-01-03T20:08:22",
+                "updated_at": "2024-08-25T16:11:21"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 3,
+                "email": "john56@example.com",
+                "name": "Elizabeth Fields",
+                "age": 8,
+                "parental_email": "harriscrystal@example.org",
+                "password_hashed": "783295fb1a27f3a80f3591808deb6fa5133887bba08c12674195dba6b24351f9",
+                "created_at": "2025-08-28T08:10:35",
+                "updated_at": "2025-12-02T00:25:25",
+                "dob": "2010-09-06",
+                "gender": "female",
+                "class_level": "KS3",
+                "school_name": "Francis, Simmons and Brown",
+                "reading_level": "Beginner"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 3,
+                "enrolled_at": "2024-11-29T11:25:42",
+                "user_id": 3,
+                "topic_id": 3,
+                "is_completed": true,
+                "have_certificate": true
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 3,
+                "user_id": 3,
+                "login_timestamp": "2025-11-07T07:25:17",
+                "time_spent": 48.85,
+                "points_earned": 1,
+                "activities_completed": 13
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 3,
+                "enrollment_id": 3,
+                "started_at": "2025-11-08T08:50:21",
+                "total_time_spent": 11.22,
+                "device_type": "mobile",
+                "completed_at": "2025-08-22T11:59:12",
+                "completion_percent": 35.51,
+                "geo_location": "North Heather"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 3,
+                "topic_session_id": 3,
+                "section_content_id": 3,
+                "time_spent": 5.06,
+                "progress_percent": 39.98,
+                "replay_count": 1,
+                "points_earned": 4,
+                "skipped_content": false,
+                "started_at": "2024-08-14T09:21:59",
+                "completed_at": "2024-03-30T20:27:54"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 3,
+                "chapter_session_id": 3,
+                "activity_id": "8158b835-3a28-4c8b-b34a-0fc0d9ffdd1c",
+                "activity_type": "open_question",
+                "user_answer": "establish",
+                "input_method": "mic",
+                "attempts": 2,
+                "is_right": false,
+                "submitted_at": "2025-08-01T11:20:00",
+                "activity_skip": false,
+                "time_spent": 4.6,
+                "used_hint": true,
+                "points_earned": 2
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 3,
+                "user_id": 3,
+                "topic_id": 3,
+                "api_heading_id": 40,
+                "section_index": 58,
+                "title": "generation",
+                "device_type": "desktop",
+                "created_at": "2025-01-15T16:19:33"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 3,
+                "user_id": 3,
+                "title": "space",
+                "subject": "history",
+                "duration": 61,
+                "class_level": "middle",
+                "created_at": "2025-04-15T01:08:47"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 3,
+                "chapter_session_id": 3,
+                "avatar_name": "Janet",
+                "clothes_set": "response",
+                "time_spent": 4.17,
+                "accessory": "him",
+                "selected_at": "2025-04-15T14:50:10"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 3,
+                "chapter_session_id": 3,
+                "font_size": 5,
+                "font_style": "italic",
+                "selected_at": "2025-05-16T03:40:06"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 3,
+                "chapter_session_id": 3,
+                "time_spent": 4.27,
+                "background_option": "free",
+                "selected_at": "2024-11-13T00:23:33"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 3,
+                "chapter_session_id": 3,
+                "ai_response": "Research grow station show relate color.",
+                "input_method": "touch",
+                "time_spent": 3.49,
+                "user_message": "Performance skin decide sea.",
+                "selected_at": "2025-11-07T21:34:01"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 3,
+                "topic_id": 3,
+                "user_id": 3,
+                "title": "serious",
+                "image_path": "lawyer",
+                "section_index": 90,
+                "api_heading_id": "relate",
+                "created_at": "2024-10-09T17:08:15",
+                "updated_at": "2024-02-22T04:17:36",
+                "deleted_at": "2024-05-30T23:37:54",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 3,
+                "lesson_section_id": 3,
+                "reading_level": "Advanced",
+                "paragraph_delta_json": "Way seven mention shake. Compare imagine win. Hotel middle approach poor. Source sometimes seat book.\nAlmost language find apply force prepare. Early agent address area lawyer.",
+                "api_grade_level": "figure",
+                "api_reading_level": "resource",
+                "created_at": "2024-05-07T18:03:55",
+                "updated_at": "2024-08-23T18:30:32",
+                "deleted_at": "2025-12-25T00:09:56"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 3,
+                "section_content_id": 3,
+                "question": "Thing statement star once pass sport.",
+                "image_path": "week",
+                "correct_option_ui_id": "fast",
+                "created_at": "2025-06-30T13:28:08",
+                "updated_at": "2024-01-08T03:30:11",
+                "deleted_at": "2025-09-06T02:05:43"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 3,
+                "mcq_id": 3,
+                "text_value": "black",
+                "created_at": "2025-12-12T15:57:21",
+                "updated_at": "2025-02-12T05:58:39",
+                "deleted_at": "2024-06-01T06:42:23"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 3,
+                "mcq_id": 3,
+                "chapter_session_id": 3,
+                "click_count": 5,
+                "image_path": "word",
+                "last_click": "2025-01-10T17:40:10",
+                "created_at": "2025-10-03T21:41:50",
+                "updated_at": "2025-04-20T04:24:34",
+                "deleted_at": "2025-06-14T06:10:51"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 3,
+                "section_content_id": 3,
+                "question": "Very mention think pull.",
+                "hint": "use",
+                "answer": "great",
+                "created_at": "2024-11-06T12:29:47",
+                "updated_at": "2024-01-11T14:07:23",
+                "deleted_at": "2025-09-13T17:08:06"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 3,
+                "chapter_session_id": 3,
+                "click_count": 5,
+                "image_path": "lose",
+                "last_click": "2025-01-17T18:15:49",
+                "created_at": "2025-11-18T07:09:29",
+                "updated_at": "2024-10-22T00:47:41"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 4,
+                "email": "john41@example.com",
+                "name": "Douglas Thompson",
+                "age": 14,
+                "parental_email": "xgill@example.org",
+                "password_hashed": "df908f36d82aff74a5d51991fc9936b6283524b44d42fafb214e0bec21b9260d",
+                "created_at": "2024-06-20T14:12:46",
+                "updated_at": "2024-08-07T13:56:08",
+                "dob": "2017-10-02",
+                "gender": "male",
+                "class_level": "KS3",
+                "school_name": "Johnson, Benton and Johnson",
+                "reading_level": "Advanced"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 4,
+                "enrolled_at": "2024-05-14T09:23:40",
+                "user_id": 4,
+                "topic_id": 4,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 4,
+                "user_id": 4,
+                "login_timestamp": "2024-04-19T20:20:53",
+                "time_spent": 56.17,
+                "points_earned": 8,
+                "activities_completed": 6
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 4,
+                "enrollment_id": 4,
+                "started_at": "2025-01-25T21:12:12",
+                "total_time_spent": 15.82,
+                "device_type": "mobile",
+                "completed_at": "2025-04-24T19:24:52",
+                "completion_percent": 10.62,
+                "geo_location": "Christinehaven"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 4,
+                "topic_session_id": 4,
+                "section_content_id": 4,
+                "time_spent": 7.47,
+                "progress_percent": 62.19,
+                "replay_count": 0,
+                "points_earned": 0,
+                "skipped_content": false,
+                "started_at": "2024-11-25T10:20:54",
+                "completed_at": "2025-03-13T06:29:44"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 4,
+                "chapter_session_id": 4,
+                "activity_id": "48517f0d-9fe0-430e-a214-8666a109235c",
+                "activity_type": "mcq",
+                "user_answer": "hear",
+                "input_method": "mic",
+                "attempts": 1,
+                "is_right": false,
+                "submitted_at": "2025-03-10T06:55:12",
+                "activity_skip": false,
+                "time_spent": 4.24,
+                "used_hint": false,
+                "points_earned": 0
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 4,
+                "user_id": 4,
+                "topic_id": 4,
+                "api_heading_id": 76,
+                "section_index": 15,
+                "title": "important",
+                "device_type": "mobile",
+                "created_at": "2024-08-15T16:55:29"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 4,
+                "user_id": 4,
+                "title": "scientist",
+                "subject": "history",
+                "duration": 64,
+                "class_level": "lower",
+                "created_at": "2024-05-19T10:04:29"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 4,
+                "chapter_session_id": 4,
+                "avatar_name": "Darlene",
+                "clothes_set": "company",
+                "time_spent": 9.8,
+                "accessory": "last",
+                "selected_at": "2024-02-18T02:29:02"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 4,
+                "chapter_session_id": 4,
+                "font_size": 2,
+                "font_style": "bold",
+                "selected_at": "2024-04-07T23:43:33"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 4,
+                "chapter_session_id": 4,
+                "time_spent": 4.16,
+                "background_option": "choice",
+                "selected_at": "2024-04-10T20:39:37"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 4,
+                "chapter_session_id": 4,
+                "ai_response": "Stuff follow method control.",
+                "input_method": "keyboard",
+                "time_spent": 9.7,
+                "user_message": "Table after environmental.",
+                "selected_at": "2024-11-07T12:44:28"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 4,
+                "topic_id": 4,
+                "user_id": 4,
+                "title": "nearly",
+                "image_path": "blue",
+                "section_index": 35,
+                "api_heading_id": "fine",
+                "created_at": "2024-06-18T17:28:59",
+                "updated_at": "2024-12-25T16:24:16",
+                "deleted_at": "2024-10-04T14:19:15",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 4,
+                "lesson_section_id": 4,
+                "reading_level": "Beginner",
+                "paragraph_delta_json": "Republican perform wait beyond wind. Great treat represent.\nDeep indicate rock management benefit people leg artist. Fund fall another college.",
+                "api_grade_level": "interesting",
+                "api_reading_level": "effect",
+                "created_at": "2025-01-15T00:08:18",
+                "updated_at": "2025-06-09T00:06:43",
+                "deleted_at": "2024-05-08T23:09:59"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 4,
+                "section_content_id": 4,
+                "question": "Especially talk today value deal challenge sense call.",
+                "image_path": "month",
+                "correct_option_ui_id": "job",
+                "created_at": "2025-09-14T01:00:22",
+                "updated_at": "2024-05-16T03:01:19",
+                "deleted_at": "2025-06-11T14:36:08"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 4,
+                "mcq_id": 4,
+                "text_value": "call",
+                "created_at": "2025-02-14T08:39:46",
+                "updated_at": "2024-11-07T17:34:57",
+                "deleted_at": "2024-08-31T19:13:25"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 4,
+                "mcq_id": 4,
+                "chapter_session_id": 4,
+                "click_count": 3,
+                "image_path": "body",
+                "last_click": "2025-11-26T09:44:56",
+                "created_at": "2025-02-19T06:48:12",
+                "updated_at": "2024-10-04T11:11:09",
+                "deleted_at": "2025-08-07T14:05:16"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 4,
+                "section_content_id": 4,
+                "question": "Fight matter loss tree coach run whether.",
+                "hint": "concern",
+                "answer": "court",
+                "created_at": "2025-03-09T18:53:36",
+                "updated_at": "2025-01-19T15:48:02",
+                "deleted_at": "2024-11-04T15:01:46"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 4,
+                "chapter_session_id": 4,
+                "click_count": 5,
+                "image_path": "end",
+                "last_click": "2024-12-01T07:25:55",
+                "created_at": "2024-10-24T19:27:17",
+                "updated_at": "2025-09-10T21:48:56"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 5,
+                "email": "cscott@example.org",
+                "name": "John Villa",
+                "age": 15,
+                "parental_email": "pheath@example.com",
+                "password_hashed": "57495113b03b7350c8b656036e7c7fc73bfd1f71032ee18b96cd685698eb9bd8",
+                "created_at": "2025-03-18T20:43:31",
+                "updated_at": "2025-11-29T19:45:28",
+                "dob": "2010-09-05",
+                "gender": "male",
+                "class_level": "KS2",
+                "school_name": "Hutchinson Inc",
+                "reading_level": "Intermediate"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 5,
+                "enrolled_at": "2024-01-10T12:59:48",
+                "user_id": 5,
+                "topic_id": 5,
+                "is_completed": true,
+                "have_certificate": true
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 5,
+                "user_id": 5,
+                "login_timestamp": "2025-09-07T06:42:56",
+                "time_spent": 32.9,
+                "points_earned": 0,
+                "activities_completed": 10
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 5,
+                "enrollment_id": 5,
+                "started_at": "2024-05-09T16:03:39",
+                "total_time_spent": 9.68,
+                "device_type": "tablet",
+                "completed_at": "2024-05-25T16:18:04",
+                "completion_percent": 96.08,
+                "geo_location": "Harveyland"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 5,
+                "topic_session_id": 5,
+                "section_content_id": 5,
+                "time_spent": 5.24,
+                "progress_percent": 67.67,
+                "replay_count": 1,
+                "points_earned": 5,
+                "skipped_content": false,
+                "started_at": "2025-08-05T06:28:57",
+                "completed_at": "2024-01-18T15:51:09"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 5,
+                "chapter_session_id": 5,
+                "activity_id": "f9576921-d38b-4bf2-a3ba-f391c56eef04",
+                "activity_type": "drag_drop",
+                "user_answer": "they",
+                "input_method": "mic",
+                "attempts": 2,
+                "is_right": false,
+                "submitted_at": "2025-06-27T08:34:02",
+                "activity_skip": true,
+                "time_spent": 3.42,
+                "used_hint": false,
+                "points_earned": 1
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 5,
+                "user_id": 5,
+                "topic_id": 5,
+                "api_heading_id": 76,
+                "section_index": 30,
+                "title": "tough",
+                "device_type": "tablet",
+                "created_at": "2025-08-01T16:54:40"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 5,
+                "user_id": 5,
+                "title": "partner",
+                "subject": "maths",
+                "duration": 63,
+                "class_level": "lower",
+                "created_at": "2025-05-23T18:35:09"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 5,
+                "chapter_session_id": 5,
+                "avatar_name": "Joseph",
+                "clothes_set": "threat",
+                "time_spent": 8.31,
+                "accessory": "green",
+                "selected_at": "2025-05-09T04:08:21"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 5,
+                "chapter_session_id": 5,
+                "font_size": 6,
+                "font_style": "bold",
+                "selected_at": "2024-10-02T18:46:29"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 5,
+                "chapter_session_id": 5,
+                "time_spent": 2.88,
+                "background_option": "almost",
+                "selected_at": "2025-08-16T23:48:38"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 5,
+                "chapter_session_id": 5,
+                "ai_response": "Drive anyone increase.",
+                "input_method": "mic",
+                "time_spent": 2.49,
+                "user_message": "Learn particularly floor rule senior reduce.",
+                "selected_at": "2025-01-05T10:41:04"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 5,
+                "topic_id": 5,
+                "user_id": 5,
+                "title": "six",
+                "image_path": "indeed",
+                "section_index": 86,
+                "api_heading_id": "blood",
+                "created_at": "2025-07-28T21:56:17",
+                "updated_at": "2025-02-02T01:25:11",
+                "deleted_at": "2024-12-17T22:51:23",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 5,
+                "lesson_section_id": 5,
+                "reading_level": "Advanced",
+                "paragraph_delta_json": "Policy set across outside indicate state. Act war admit care. Act sit heavy act manager meeting road series.\nLay camera west camera generation building. New most guy board.",
+                "api_grade_level": "movement",
+                "api_reading_level": "culture",
+                "created_at": "2024-04-03T22:50:37",
+                "updated_at": "2024-06-24T04:19:56",
+                "deleted_at": "2025-03-22T00:23:46"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 5,
+                "section_content_id": 5,
+                "question": "From guy outside themselves.",
+                "image_path": "anything",
+                "correct_option_ui_id": "us",
+                "created_at": "2024-11-05T20:58:34",
+                "updated_at": "2025-05-21T04:24:07",
+                "deleted_at": "2024-11-29T13:27:25"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 5,
+                "mcq_id": 5,
+                "text_value": "hot",
+                "created_at": "2024-03-12T22:25:53",
+                "updated_at": "2025-10-15T07:40:25",
+                "deleted_at": "2024-11-24T08:14:31"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 5,
+                "mcq_id": 5,
+                "chapter_session_id": 5,
+                "click_count": 1,
+                "image_path": "race",
+                "last_click": "2025-03-06T17:47:50",
+                "created_at": "2024-01-22T10:37:44",
+                "updated_at": "2024-01-08T10:12:49",
+                "deleted_at": "2025-01-22T22:14:04"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 5,
+                "section_content_id": 5,
+                "question": "Approach model successful common.",
+                "hint": "ask",
+                "answer": "film",
+                "created_at": "2024-01-03T23:49:37",
+                "updated_at": "2025-12-03T05:34:45",
+                "deleted_at": "2025-02-07T22:14:35"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 5,
+                "chapter_session_id": 5,
+                "click_count": 4,
+                "image_path": "white",
+                "last_click": "2024-12-17T17:01:33",
+                "created_at": "2024-12-11T10:56:57",
+                "updated_at": "2024-07-02T03:22:20"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 6,
+                "email": "phamedwin@example.org",
+                "name": "Darren Gonzalez",
+                "age": 11,
+                "parental_email": "laura41@example.com",
+                "password_hashed": "44f04cfcc9010363529ceeaa289fb556c59b7ad9ab7593f221be969ff8a004a3",
+                "created_at": "2024-06-07T23:23:19",
+                "updated_at": "2025-01-14T16:13:19",
+                "dob": "2015-03-14",
+                "gender": "female",
+                "class_level": "KS1",
+                "school_name": "Larsen LLC",
+                "reading_level": "Beginner"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 6,
+                "enrolled_at": "2024-10-16T17:29:18",
+                "user_id": 6,
+                "topic_id": 6,
+                "is_completed": true,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 6,
+                "user_id": 6,
+                "login_timestamp": "2024-03-07T05:52:30",
+                "time_spent": 44.09,
+                "points_earned": 1,
+                "activities_completed": 6
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 6,
+                "enrollment_id": 6,
+                "started_at": "2024-12-03T10:07:06",
+                "total_time_spent": 22.65,
+                "device_type": "mobile",
+                "completed_at": "2024-12-04T19:10:21",
+                "completion_percent": 96.11,
+                "geo_location": "New Rachel"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 6,
+                "topic_session_id": 6,
+                "section_content_id": 6,
+                "time_spent": 7.67,
+                "progress_percent": 81.88,
+                "replay_count": 2,
+                "points_earned": 1,
+                "skipped_content": false,
+                "started_at": "2024-12-31T07:56:42",
+                "completed_at": "2025-04-28T07:31:01"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 6,
+                "chapter_session_id": 6,
+                "activity_id": "32a137f0-7371-4b9e-b90d-914fc17754d9",
+                "activity_type": "open_question",
+                "user_answer": "edge",
+                "input_method": "keyboard",
+                "attempts": 3,
+                "is_right": false,
+                "submitted_at": "2024-05-28T23:54:09",
+                "activity_skip": true,
+                "time_spent": 2.55,
+                "used_hint": false,
+                "points_earned": 2
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 6,
+                "user_id": 6,
+                "topic_id": 6,
+                "api_heading_id": 79,
+                "section_index": 43,
+                "title": "teacher",
+                "device_type": "tablet",
+                "created_at": "2025-05-01T12:55:45"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 6,
+                "user_id": 6,
+                "title": "answer",
+                "subject": "history",
+                "duration": 89,
+                "class_level": "middle",
+                "created_at": "2025-02-25T17:17:52"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 6,
+                "chapter_session_id": 6,
+                "avatar_name": "Ivan",
+                "clothes_set": "under",
+                "time_spent": 3.05,
+                "accessory": "hundred",
+                "selected_at": "2025-03-30T15:23:24"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 6,
+                "chapter_session_id": 6,
+                "font_size": 1,
+                "font_style": "normal",
+                "selected_at": "2024-05-23T08:50:21"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 6,
+                "chapter_session_id": 6,
+                "time_spent": 5.35,
+                "background_option": "enjoy",
+                "selected_at": "2025-05-26T18:01:46"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 6,
+                "chapter_session_id": 6,
+                "ai_response": "Serious any at citizen appear let.",
+                "input_method": "mic",
+                "time_spent": 3.31,
+                "user_message": "Nation score style much material floor.",
+                "selected_at": "2024-12-11T08:00:54"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 6,
+                "topic_id": 6,
+                "user_id": 6,
+                "title": "war",
+                "image_path": "property",
+                "section_index": 75,
+                "api_heading_id": "of",
+                "created_at": "2024-02-28T22:03:10",
+                "updated_at": "2025-08-09T15:06:20",
+                "deleted_at": "2024-04-05T03:21:27",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 6,
+                "lesson_section_id": 6,
+                "reading_level": "Beginner",
+                "paragraph_delta_json": "Society response street century fish move live factor. Company range well today soon end.\nRange whose prepare whole have television according talk. Least begin politics.",
+                "api_grade_level": "check",
+                "api_reading_level": "wish",
+                "created_at": "2025-09-13T01:21:11",
+                "updated_at": "2024-03-24T05:54:34",
+                "deleted_at": "2024-05-31T15:34:58"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 6,
+                "section_content_id": 6,
+                "question": "Factor drug leave budget seat hair economy head.",
+                "image_path": "kid",
+                "correct_option_ui_id": "watch",
+                "created_at": "2025-05-25T06:35:03",
+                "updated_at": "2025-04-22T11:57:36",
+                "deleted_at": "2024-07-13T08:42:12"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 6,
+                "mcq_id": 6,
+                "text_value": "including",
+                "created_at": "2025-12-26T14:32:06",
+                "updated_at": "2025-01-04T04:07:49",
+                "deleted_at": "2024-08-12T06:27:00"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 6,
+                "mcq_id": 6,
+                "chapter_session_id": 6,
+                "click_count": 2,
+                "image_path": "else",
+                "last_click": "2024-08-07T14:37:25",
+                "created_at": "2025-09-21T22:29:17",
+                "updated_at": "2025-07-22T09:07:48",
+                "deleted_at": "2025-06-21T14:31:14"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 6,
+                "section_content_id": 6,
+                "question": "Management us break first.",
+                "hint": "fish",
+                "answer": "time",
+                "created_at": "2025-12-08T19:34:50",
+                "updated_at": "2024-10-31T03:37:26",
+                "deleted_at": "2024-07-21T20:39:58"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 6,
+                "chapter_session_id": 6,
+                "click_count": 4,
+                "image_path": "article",
+                "last_click": "2024-02-11T01:04:22",
+                "created_at": "2025-09-25T05:43:09",
+                "updated_at": "2025-01-18T23:41:26"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 7,
+                "email": "hernandezjesse@example.net",
+                "name": "Marissa Garcia",
+                "age": 10,
+                "parental_email": "matthewruiz@example.net",
+                "password_hashed": "3293af38c80637fa2dd10b116ff1c7b5582cfe3af268c2b0bf0d8d9083240126",
+                "created_at": "2025-06-11T20:32:36",
+                "updated_at": "2025-04-15T16:42:01",
+                "dob": "2010-02-03",
+                "gender": "male",
+                "class_level": "KS3",
+                "school_name": "Hood Inc",
+                "reading_level": "Beginner"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 7,
+                "enrolled_at": "2024-05-23T18:24:22",
+                "user_id": 7,
+                "topic_id": 7,
+                "is_completed": true,
+                "have_certificate": true
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 7,
+                "user_id": 7,
+                "login_timestamp": "2025-01-21T20:01:00",
+                "time_spent": 43.3,
+                "points_earned": 2,
+                "activities_completed": 14
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 7,
+                "enrollment_id": 7,
+                "started_at": "2025-06-23T11:38:47",
+                "total_time_spent": 10.93,
+                "device_type": "tablet",
+                "completed_at": "2025-12-09T22:58:41",
+                "completion_percent": 15.27,
+                "geo_location": "East Ashleychester"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 7,
+                "topic_session_id": 7,
+                "section_content_id": 7,
+                "time_spent": 4.27,
+                "progress_percent": 10.64,
+                "replay_count": 3,
+                "points_earned": 3,
+                "skipped_content": false,
+                "started_at": "2024-11-13T19:46:41",
+                "completed_at": "2025-04-03T08:38:56"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 7,
+                "chapter_session_id": 7,
+                "activity_id": "987fd797-ef80-40bf-85fd-2ceea0d99d41",
+                "activity_type": "mcq",
+                "user_answer": "either",
+                "input_method": "mic",
+                "attempts": 3,
+                "is_right": true,
+                "submitted_at": "2025-06-26T17:43:40",
+                "activity_skip": true,
+                "time_spent": 4.74,
+                "used_hint": true,
+                "points_earned": 4
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 7,
+                "user_id": 7,
+                "topic_id": 7,
+                "api_heading_id": 74,
+                "section_index": 24,
+                "title": "west",
+                "device_type": "mobile",
+                "created_at": "2024-09-12T02:02:30"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 7,
+                "user_id": 7,
+                "title": "weight",
+                "subject": "science",
+                "duration": 87,
+                "class_level": "lower",
+                "created_at": "2024-04-08T02:38:10"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 7,
+                "chapter_session_id": 7,
+                "avatar_name": "Christopher",
+                "clothes_set": "animal",
+                "time_spent": 2.11,
+                "accessory": "generation",
+                "selected_at": "2024-08-11T04:44:35"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 7,
+                "chapter_session_id": 7,
+                "font_size": 3,
+                "font_style": "italic",
+                "selected_at": "2025-01-13T07:22:18"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 7,
+                "chapter_session_id": 7,
+                "time_spent": 1.82,
+                "background_option": "ago",
+                "selected_at": "2024-04-16T00:51:17"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 7,
+                "chapter_session_id": 7,
+                "ai_response": "Hit though than view.",
+                "input_method": "keyboard",
+                "time_spent": 3.84,
+                "user_message": "Important medical chair financial.",
+                "selected_at": "2024-01-13T02:27:42"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 7,
+                "topic_id": 7,
+                "user_id": 7,
+                "title": "little",
+                "image_path": "painting",
+                "section_index": 84,
+                "api_heading_id": "trip",
+                "created_at": "2024-12-14T13:14:29",
+                "updated_at": "2024-09-28T22:55:37",
+                "deleted_at": "2025-01-21T13:30:26",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 7,
+                "lesson_section_id": 7,
+                "reading_level": "Intermediate",
+                "paragraph_delta_json": "Defense suddenly effect to. Manager decade mention wait prepare.\nRadio mention stay let. Window sound yet. Discussion crime fight successful debate nation.",
+                "api_grade_level": "best",
+                "api_reading_level": "person",
+                "created_at": "2024-04-06T05:37:37",
+                "updated_at": "2024-11-05T13:02:40",
+                "deleted_at": "2024-11-12T09:26:38"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 7,
+                "section_content_id": 7,
+                "question": "Them again including six near.",
+                "image_path": "anything",
+                "correct_option_ui_id": "part",
+                "created_at": "2025-07-18T04:57:49",
+                "updated_at": "2024-03-27T11:47:10",
+                "deleted_at": "2024-06-09T04:06:43"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 7,
+                "mcq_id": 7,
+                "text_value": "war",
+                "created_at": "2024-11-01T20:03:12",
+                "updated_at": "2024-04-19T22:05:37",
+                "deleted_at": "2025-12-11T10:57:13"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 7,
+                "mcq_id": 7,
+                "chapter_session_id": 7,
+                "click_count": 5,
+                "image_path": "character",
+                "last_click": "2024-08-29T20:09:12",
+                "created_at": "2024-09-27T07:48:34",
+                "updated_at": "2024-08-23T09:16:17",
+                "deleted_at": "2025-06-30T09:57:48"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 7,
+                "section_content_id": 7,
+                "question": "Talk happy physical rich camera chance way.",
+                "hint": "different",
+                "answer": "realize",
+                "created_at": "2024-02-05T15:09:42",
+                "updated_at": "2025-08-06T23:14:41",
+                "deleted_at": "2024-09-13T04:13:18"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 7,
+                "chapter_session_id": 7,
+                "click_count": 1,
+                "image_path": "his",
+                "last_click": "2024-08-31T01:36:24",
+                "created_at": "2024-01-13T15:14:22",
+                "updated_at": "2025-03-15T08:35:17"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 8,
+                "email": "breyes@example.org",
+                "name": "Cheryl Nunez",
+                "age": 15,
+                "parental_email": "kwilliams@example.net",
+                "password_hashed": "5e1a90535e95cb772de56c10a08bd328c11d488f76b5ddcf679b2d4a70c4498c",
+                "created_at": "2025-11-10T19:10:51",
+                "updated_at": "2025-06-27T05:25:52",
+                "dob": "2014-12-05",
+                "gender": "male",
+                "class_level": "KS2",
+                "school_name": "Jackson LLC",
+                "reading_level": "Intermediate"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 8,
+                "enrolled_at": "2024-11-18T11:25:58",
+                "user_id": 8,
+                "topic_id": 8,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 8,
+                "user_id": 8,
+                "login_timestamp": "2025-06-20T10:39:19",
+                "time_spent": 45.66,
+                "points_earned": 7,
+                "activities_completed": 1
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 8,
+                "enrollment_id": 8,
+                "started_at": "2024-02-02T00:01:47",
+                "total_time_spent": 20.42,
+                "device_type": "desktop",
+                "completed_at": "2024-08-19T06:15:15",
+                "completion_percent": 51.1,
+                "geo_location": "Monicaland"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 8,
+                "topic_session_id": 8,
+                "section_content_id": 8,
+                "time_spent": 5.75,
+                "progress_percent": 20.89,
+                "replay_count": 2,
+                "points_earned": 0,
+                "skipped_content": true,
+                "started_at": "2025-07-06T17:04:45",
+                "completed_at": "2024-03-27T13:58:34"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 8,
+                "chapter_session_id": 8,
+                "activity_id": "08c499cf-1fc3-4198-93f0-e4030d77323f",
+                "activity_type": "mcq",
+                "user_answer": "provide",
+                "input_method": "keyboard",
+                "attempts": 2,
+                "is_right": true,
+                "submitted_at": "2025-07-23T06:11:34",
+                "activity_skip": false,
+                "time_spent": 4.16,
+                "used_hint": true,
+                "points_earned": 1
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 8,
+                "user_id": 8,
+                "topic_id": 8,
+                "api_heading_id": 61,
+                "section_index": 5,
+                "title": "answer",
+                "device_type": "mobile",
+                "created_at": "2025-07-31T05:50:56"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 8,
+                "user_id": 8,
+                "title": "involve",
+                "subject": "maths",
+                "duration": 43,
+                "class_level": "higher",
+                "created_at": "2025-06-03T17:14:27"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 8,
+                "chapter_session_id": 8,
+                "avatar_name": "Michael",
+                "clothes_set": "machine",
+                "time_spent": 3.0,
+                "accessory": "scene",
+                "selected_at": "2025-07-29T14:32:13"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 8,
+                "chapter_session_id": 8,
+                "font_size": 7,
+                "font_style": "normal",
+                "selected_at": "2024-07-16T00:12:23"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 8,
+                "chapter_session_id": 8,
+                "time_spent": 2.39,
+                "background_option": "there",
+                "selected_at": "2024-02-27T01:31:56"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 8,
+                "chapter_session_id": 8,
+                "ai_response": "Yes political more manager smile.",
+                "input_method": "mic",
+                "time_spent": 2.22,
+                "user_message": "Job yes rock alone example three development.",
+                "selected_at": "2024-05-13T22:39:40"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 8,
+                "topic_id": 8,
+                "user_id": 8,
+                "title": "occur",
+                "image_path": "rest",
+                "section_index": 98,
+                "api_heading_id": "when",
+                "created_at": "2025-09-24T09:18:28",
+                "updated_at": "2025-01-20T02:43:20",
+                "deleted_at": "2024-01-21T13:19:06",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 8,
+                "lesson_section_id": 8,
+                "reading_level": "Advanced",
+                "paragraph_delta_json": "Do run character current middle well. Mrs heavy apply evening year site process. Return stuff thousand some.\nLeg real commercial anything history respond. Power hope parent low.",
+                "api_grade_level": "leg",
+                "api_reading_level": "threat",
+                "created_at": "2025-04-28T20:38:11",
+                "updated_at": "2025-05-17T20:49:18",
+                "deleted_at": "2025-11-15T18:35:31"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 8,
+                "section_content_id": 8,
+                "question": "Stay popular network include opportunity simple fish.",
+                "image_path": "Congress",
+                "correct_option_ui_id": "head",
+                "created_at": "2024-02-21T22:19:53",
+                "updated_at": "2025-01-10T04:57:19",
+                "deleted_at": "2025-08-27T03:40:15"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 8,
+                "mcq_id": 8,
+                "text_value": "same",
+                "created_at": "2024-09-21T03:40:12",
+                "updated_at": "2025-12-25T19:50:35",
+                "deleted_at": "2025-04-25T19:02:41"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 8,
+                "mcq_id": 8,
+                "chapter_session_id": 8,
+                "click_count": 4,
+                "image_path": "still",
+                "last_click": "2025-08-27T13:06:39",
+                "created_at": "2025-09-01T13:40:42",
+                "updated_at": "2024-06-20T19:28:33",
+                "deleted_at": "2024-03-10T18:18:44"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 8,
+                "section_content_id": 8,
+                "question": "Star let thank level but western.",
+                "hint": "contain",
+                "answer": "finally",
+                "created_at": "2025-12-21T08:27:02",
+                "updated_at": "2025-02-06T03:59:43",
+                "deleted_at": "2025-01-31T07:12:55"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 8,
+                "chapter_session_id": 8,
+                "click_count": 4,
+                "image_path": "decision",
+                "last_click": "2025-08-21T00:56:02",
+                "created_at": "2024-09-08T00:53:38",
+                "updated_at": "2024-11-17T02:17:30"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 9,
+                "email": "gjohnson@example.com",
+                "name": "Brandon Rogers",
+                "age": 6,
+                "parental_email": "valeriejohnson@example.com",
+                "password_hashed": "99a507c6e36f9306cb92cff22f6b6d87464664fe584f6151ebbf7e81ee95a352",
+                "created_at": "2025-03-12T05:47:36",
+                "updated_at": "2025-06-14T02:32:14",
+                "dob": "2018-04-04",
+                "gender": "male",
+                "class_level": "KS3",
+                "school_name": "Stout-Bush",
+                "reading_level": "Beginner"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 9,
+                "enrolled_at": "2025-09-22T16:13:36",
+                "user_id": 9,
+                "topic_id": 9,
+                "is_completed": true,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 9,
+                "user_id": 9,
+                "login_timestamp": "2025-09-23T04:41:08",
+                "time_spent": 44.4,
+                "points_earned": 3,
+                "activities_completed": 4
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 9,
+                "enrollment_id": 9,
+                "started_at": "2024-05-31T20:29:33",
+                "total_time_spent": 9.0,
+                "device_type": "mobile",
+                "completed_at": "2024-12-26T22:21:42",
+                "completion_percent": 6.28,
+                "geo_location": "New Sarah"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 9,
+                "topic_session_id": 9,
+                "section_content_id": 9,
+                "time_spent": 5.96,
+                "progress_percent": 56.85,
+                "replay_count": 2,
+                "points_earned": 2,
+                "skipped_content": true,
+                "started_at": "2024-12-11T19:56:36",
+                "completed_at": "2025-07-10T15:39:54"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 9,
+                "chapter_session_id": 9,
+                "activity_id": "31a691ca-8193-4f76-bf53-72cf3189c4bb",
+                "activity_type": "drag_drop",
+                "user_answer": "rock",
+                "input_method": "touch",
+                "attempts": 1,
+                "is_right": true,
+                "submitted_at": "2025-09-11T12:37:06",
+                "activity_skip": false,
+                "time_spent": 1.48,
+                "used_hint": false,
+                "points_earned": 2
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 9,
+                "user_id": 9,
+                "topic_id": 9,
+                "api_heading_id": 67,
+                "section_index": 55,
+                "title": "food",
+                "device_type": "desktop",
+                "created_at": "2024-04-20T04:39:22"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 9,
+                "user_id": 9,
+                "title": "catch",
+                "subject": "history",
+                "duration": 71,
+                "class_level": "lower",
+                "created_at": "2024-05-27T21:27:18"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 9,
+                "chapter_session_id": 9,
+                "avatar_name": "Mitchell",
+                "clothes_set": "free",
+                "time_spent": 2.19,
+                "accessory": "cost",
+                "selected_at": "2025-09-28T06:58:05"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 9,
+                "chapter_session_id": 9,
+                "font_size": 5,
+                "font_style": "italic",
+                "selected_at": "2024-04-19T04:35:04"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 9,
+                "chapter_session_id": 9,
+                "time_spent": 5.57,
+                "background_option": "century",
+                "selected_at": "2025-01-24T13:37:35"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 9,
+                "chapter_session_id": 9,
+                "ai_response": "Vote detail born season.",
+                "input_method": "touch",
+                "time_spent": 1.73,
+                "user_message": "Up perform small experience interesting eat office.",
+                "selected_at": "2025-05-26T21:38:11"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 9,
+                "topic_id": 9,
+                "user_id": 9,
+                "title": "read",
+                "image_path": "Democrat",
+                "section_index": 25,
+                "api_heading_id": "car",
+                "created_at": "2024-10-04T00:36:28",
+                "updated_at": "2025-10-07T22:12:34",
+                "deleted_at": "2025-03-05T07:04:19",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 9,
+                "lesson_section_id": 9,
+                "reading_level": "Intermediate",
+                "paragraph_delta_json": "Camera you begin ground. Structure finally could sound decide.\nNice evening issue human either effect. Full father girl store teacher hear this.",
+                "api_grade_level": "draw",
+                "api_reading_level": "ball",
+                "created_at": "2024-09-25T23:04:15",
+                "updated_at": "2024-12-12T14:03:16",
+                "deleted_at": "2025-03-04T13:32:36"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 9,
+                "section_content_id": 9,
+                "question": "Marriage challenge share front expert general rise.",
+                "image_path": "likely",
+                "correct_option_ui_id": "against",
+                "created_at": "2025-08-26T12:07:56",
+                "updated_at": "2025-07-27T18:14:37",
+                "deleted_at": "2025-03-17T07:01:16"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 9,
+                "mcq_id": 9,
+                "text_value": "between",
+                "created_at": "2024-02-13T04:04:04",
+                "updated_at": "2024-03-12T08:38:46",
+                "deleted_at": "2025-03-05T13:10:14"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 9,
+                "mcq_id": 9,
+                "chapter_session_id": 9,
+                "click_count": 3,
+                "image_path": "management",
+                "last_click": "2024-08-03T19:59:27",
+                "created_at": "2025-01-22T21:25:32",
+                "updated_at": "2024-12-27T08:34:12",
+                "deleted_at": "2024-11-28T02:02:55"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 9,
+                "section_content_id": 9,
+                "question": "Foreign address pick no painting.",
+                "hint": "identify",
+                "answer": "major",
+                "created_at": "2025-05-21T13:21:54",
+                "updated_at": "2024-09-05T23:04:50",
+                "deleted_at": "2025-09-04T16:35:13"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 9,
+                "chapter_session_id": 9,
+                "click_count": 4,
+                "image_path": "reason",
+                "last_click": "2025-05-09T11:12:43",
+                "created_at": "2025-09-08T10:52:11",
+                "updated_at": "2024-09-09T08:03:29"
+            }
+        ]
+    },
+    {
+        "user": [
+            {
+                "user_id": 10,
+                "email": "robertcarter@example.org",
+                "name": "Ashley Campbell",
+                "age": 14,
+                "parental_email": "randallalan@example.net",
+                "password_hashed": "e9d1af8ee781d55db7a545d1481e63d88b86ea3bc5f5e41137a50af1a59a4633",
+                "created_at": "2024-12-08T08:10:17",
+                "updated_at": "2024-04-07T23:11:00",
+                "dob": "2010-09-29",
+                "gender": "female",
+                "class_level": "KS3",
+                "school_name": "Simmons PLC",
+                "reading_level": "Intermediate"
+            }
+        ],
+        "enrollment": [
+            {
+                "enrollment_id": 10,
+                "enrolled_at": "2024-05-13T17:32:03",
+                "user_id": 10,
+                "topic_id": 10,
+                "is_completed": false,
+                "have_certificate": false
+            }
+        ],
+        "daily_activity_log": [
+            {
+                "log_id": 10,
+                "user_id": 10,
+                "login_timestamp": "2024-09-18T05:08:11",
+                "time_spent": 27.59,
+                "points_earned": 1,
+                "activities_completed": 13
+            }
+        ],
+        "topic_session": [
+            {
+                "topic_session_id": 10,
+                "enrollment_id": 10,
+                "started_at": "2024-05-11T06:44:26",
+                "total_time_spent": 10.15,
+                "device_type": "tablet",
+                "completed_at": "2024-05-20T01:24:55",
+                "completion_percent": 65.43,
+                "geo_location": "Audreybury"
+            }
+        ],
+        "chapter_session": [
+            {
+                "chapter_session_id": 10,
+                "topic_session_id": 10,
+                "section_content_id": 10,
+                "time_spent": 9.91,
+                "progress_percent": 58.6,
+                "replay_count": 1,
+                "points_earned": 2,
+                "skipped_content": false,
+                "started_at": "2024-10-01T05:02:42",
+                "completed_at": "2024-06-30T17:14:39"
+            }
+        ],
+        "activity_performance": [
+            {
+                "performance_id": 10,
+                "chapter_session_id": 10,
+                "activity_id": "c6c682bc-e465-49e5-8a85-38c1b5364161",
+                "activity_type": "open_question",
+                "user_answer": "compare",
+                "input_method": "keyboard",
+                "attempts": 3,
+                "is_right": false,
+                "submitted_at": "2025-02-22T21:09:55",
+                "activity_skip": true,
+                "time_spent": 3.27,
+                "used_hint": false,
+                "points_earned": 0
+            }
+        ],
+        "lesson_session": [
+            {
+                "lesson_session_id": 10,
+                "user_id": 10,
+                "topic_id": 10,
+                "api_heading_id": 86,
+                "section_index": 58,
+                "title": "body",
+                "device_type": "tablet",
+                "created_at": "2024-05-07T18:32:45"
+            }
+        ],
+        "Topics": [
+            {
+                "topic_id": 10,
+                "user_id": 10,
+                "title": "board",
+                "subject": "science",
+                "duration": 33,
+                "class_level": "higher",
+                "created_at": "2024-02-04T10:59:41"
+            }
+        ],
+        "avatar_change": [
+            {
+                "avatar_change_id": 10,
+                "chapter_session_id": 10,
+                "avatar_name": "Courtney",
+                "clothes_set": "sometimes",
+                "time_spent": 6.3,
+                "accessory": "necessary",
+                "selected_at": "2024-06-20T12:30:49"
+            }
+        ],
+        "font_change": [
+            {
+                "font_change_id": 10,
+                "chapter_session_id": 10,
+                "font_size": 1,
+                "font_style": "bold",
+                "selected_at": "2024-02-05T16:38:19"
+            }
+        ],
+        "background_change": [
+            {
+                "background_change_id": 10,
+                "chapter_session_id": 10,
+                "time_spent": 6.3,
+                "background_option": "create",
+                "selected_at": "2025-07-01T23:19:22"
+            }
+        ],
+        "ai_chat": [
+            {
+                "chat_id": 10,
+                "chapter_session_id": 10,
+                "ai_response": "Speech next billion stop expect drive.",
+                "input_method": "keyboard",
+                "time_spent": 7.52,
+                "user_message": "Section air admit year skill face.",
+                "selected_at": "2025-04-14T16:33:32"
+            }
+        ],
+        "lesson_sections": [
+            {
+                "lesson_section_id": 10,
+                "topic_id": 10,
+                "user_id": 10,
+                "title": "what",
+                "image_path": "economy",
+                "section_index": 42,
+                "api_heading_id": "condition",
+                "created_at": "2025-09-12T14:15:51",
+                "updated_at": "2024-09-05T05:32:18",
+                "deleted_at": "2024-03-26T13:00:28",
+                "total_points": 1000
+            }
+        ],
+        "section_contents": [
+            {
+                "section_content_id": 10,
+                "lesson_section_id": 10,
+                "reading_level": "Advanced",
+                "paragraph_delta_json": "Kind just school form order.\nCapital loss represent election people it clearly drive. Mention know where reduce follow act record window.",
+                "api_grade_level": "green",
+                "api_reading_level": "officer",
+                "created_at": "2024-08-23T00:05:43",
+                "updated_at": "2024-01-23T06:23:34",
+                "deleted_at": "2025-03-01T05:59:59"
+            }
+        ],
+        "mcqs": [
+            {
+                "mcq_id": 10,
+                "section_content_id": 10,
+                "question": "Even foreign seem rest appear.",
+                "image_path": "remember",
+                "correct_option_ui_id": "network",
+                "created_at": "2025-08-31T19:11:46",
+                "updated_at": "2024-02-09T16:45:10",
+                "deleted_at": "2024-02-25T07:51:35"
+            }
+        ],
+        "mcq_options": [
+            {
+                "option_id": 10,
+                "mcq_id": 10,
+                "text_value": "exactly",
+                "created_at": "2024-07-25T21:30:24",
+                "updated_at": "2024-11-25T17:17:47",
+                "deleted_at": "2024-05-31T00:39:05"
+            }
+        ],
+        "mcq_click": [
+            {
+                "click_id": 10,
+                "mcq_id": 10,
+                "chapter_session_id": 10,
+                "click_count": 2,
+                "image_path": "pretty",
+                "last_click": "2024-11-27T02:15:26",
+                "created_at": "2024-04-14T23:39:39",
+                "updated_at": "2024-10-24T11:47:48",
+                "deleted_at": "2024-01-11T03:55:32"
+            }
+        ],
+        "open_questions": [
+            {
+                "question_id": 10,
+                "section_content_id": 10,
+                "question": "Plant less reveal treat anything story security.",
+                "hint": "resource",
+                "answer": "alone",
+                "created_at": "2024-10-05T11:18:00",
+                "updated_at": "2024-03-08T01:13:12",
+                "deleted_at": "2025-09-20T12:58:53"
+            }
+        ],
+        "resource_click": [
+            {
+                "click_id": 10,
+                "chapter_session_id": 10,
+                "click_count": 5,
+                "image_path": "pull",
+                "last_click": "2024-01-22T15:14:28",
+                "created_at": "2024-08-04T23:39:58",
+                "updated_at": "2024-10-23T23:51:00"
+            }
+        ]
+    }
+]
