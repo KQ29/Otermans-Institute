@@ -29,18 +29,9 @@ def _fmt_int(x) -> str:
 
 
 def _lines_for_mastery(acc_block: Dict[str, Any]) -> List[str]:
-    """
-    acc_block shape (from metrics_period.accuracy_and_mastery):
-      {
-        "overall": float,
-        "subjects": {subject: avg%},
-        "subjects_meta": [{"subject","avg","band","attempts"}, ...]
-      }
-    """
     if not acc_block or not acc_block.get("subjects_meta"):
         return ["No subject accuracy data in the selected period."]
     out = []
-    # sort by avg desc
     rows = sorted(acc_block["subjects_meta"], key=lambda r: r.get("avg", 0.0), reverse=True)
     for r in rows:
         subj = r.get("subject", "—")
@@ -52,19 +43,8 @@ def _lines_for_mastery(acc_block: Dict[str, Any]) -> List[str]:
 
 
 def _lines_for_speed(speed_block: Dict[str, Any]) -> List[str]:
-    """
-    speed_block shape (from metrics_period.response_time_stats):
-      {
-        "mean","median","p90","attempts",
-        "per_subject": {subject: avg_time},
-        "per_subject_meta": [{"subject","avg_time","total_time","attempts"}, ...]
-      }
-    Units: whatever you used in metrics (commonly 'mins' or 's').
-    We'll default label to 'mins' but allow override via 'unit' in block.
-    """
     if not speed_block:
         return ["No processing speed data in the selected period."]
-
     unit = speed_block.get("unit", "mins")
     unit_label = f" {unit}".rstrip()
 
@@ -81,7 +61,6 @@ def _lines_for_speed(speed_block: Dict[str, Any]) -> List[str]:
 
     rows = speed_block.get("per_subject_meta") or []
     if not rows:
-        # fallback to the simple dict if meta is absent
         per_dict = speed_block.get("per_subject") or {}
         if per_dict:
             for subj, avg_time in sorted(per_dict.items(), key=lambda kv: kv[1], reverse=True):
@@ -90,7 +69,6 @@ def _lines_for_speed(speed_block: Dict[str, Any]) -> List[str]:
             lines.append("No per-subject processing data.")
         return lines
 
-    # sort by avg_time desc
     rows = sorted(rows, key=lambda r: r.get("avg_time", 0.0), reverse=True)
     for r in rows:
         subj = r.get("subject", "—")
@@ -104,33 +82,12 @@ def _lines_for_speed(speed_block: Dict[str, Any]) -> List[str]:
 
 
 def build_report(d: Dict[str, Any]) -> str:
-    """
-    Build a text SEN report.
-
-    Expected keys in d (backward compatible):
-      - student: {name,id,class,year}
-      - period: {start,end,generated_on}
-      - prepared_for: "Teacher" | "Parent/Carer"
-      - usage: {
-          active_days,sessions,avg_session_mins,lessons_done,lessons_total,
-          completion_pct,total_time_mins,trend_vs_prev_pct
-        }
-      - focus: {
-          focus_score,focus_score_delta,class_median,avg_sustained_block_mins
-        }
-      - learning: {
-          skills: optional list, perseverance_index
-        }
-      - accuracy_mastery:  (NEW) see _lines_for_mastery()
-      - processing_speed:  (NEW) see _lines_for_speed()
-    """
     student = d.get("student", {})
     period = d.get("period", {})
     usage = d.get("usage", {})
     focus = d.get("focus", {})
     learning = d.get("learning", {}) or {}
 
-    # --- Header ---
     rep = []
     rep.append("Student Learning Report (SEN)\n")
     rep.append(f"Student: {student.get('name','')}")
@@ -141,7 +98,6 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append(f"Generated on: {period.get('generated_on','—')}")
     rep.append("Data Sources: activity_performance, chapter_session, topic_session, lesson_session, daily_activity_log, topics, enrollment\n")
 
-    # --- Executive Summary ---
     focus_delta = int(focus.get("focus_score_delta", 0) or 0)
     comp_pct = float(usage.get("completion_pct", 0) or 0)
     focus_score = int(focus.get("focus_score", 0) or 0)
@@ -160,7 +116,6 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append(f"Completion rate: {usage.get('lessons_done',0)}/{usage.get('lessons_total',0)} ({_fmt_pct(usage.get('completion_pct',0))})")
     rep.append(f"Time-on-task: {_fmt_float(usage.get('total_time_mins',0))} mins total ({_fmt_int(usage.get('trend_vs_prev_pct',0))}% vs last period)\n")
 
-    # --- SEN Profile ---
     rep.append("2) SEN Profile & Accommodations")
     rep.append("Summary: Derived metrics only (no pre-set accommodations in source).")
     rep.append("Primary Needs: —")
@@ -168,7 +123,6 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append("Effectiveness: TTS ON → 0% vs OFF → 0% (0pp)")
     rep.append("Stability: Font size changed 0× this period\n")
 
-    # --- Engagement & Usage ---
     eng_summary = (
         "Strong participation and lesson completion." if comp_pct >= 70 else
         "Very low engagement, with limited active days and short sessions." if comp_pct < 40 else
@@ -181,16 +135,14 @@ def build_report(d: Dict[str, Any]) -> str:
     rep.append(f"Completion: {_fmt_int(usage.get('lessons_done',0))} of {_fmt_int(usage.get('lessons_total',0))} lessons ({_fmt_pct(usage.get('completion_pct',0))})")
     rep.append(f"Trend: {_fmt_int(usage.get('trend_vs_prev_pct',0))}% vs last period\n")
 
-    # --- Focus & Concentration ---
     rep.append("4) Focus & Concentration")
     rep.append(f"Summary: {'Improved attention relative to class median.' if focus_score >= class_median else 'Below class median; consider shorter, more frequent sessions.'}")
     rep.append(f"Focus score: {focus_score} (class median: {class_median})")
     rep.append(f"Avg. attention block: {_fmt_float(focus.get('avg_sustained_block_mins','—'))} mins\n")
 
-    # --- NEW: Learning Progress & Mastery (per-subject accuracy) ---
+    # ---- 5) Accuracy & Mastery ----
     rep.append("5) Learning Progress & Mastery")
     rep.append("Summary: Subject-level growth based on activity performance.")
-    # If you still pass learning.skills, print them first
     for s in learning.get("skills", []):
         try:
             rep.append(f"- {s['name']}: {float(s['value'])*100:.0f}% ({float(s.get('delta',0))*100:+.0f}pp)")
@@ -199,7 +151,6 @@ def build_report(d: Dict[str, Any]) -> str:
     acc_block = d.get("accuracy_mastery", {})
     if acc_block:
         rep.extend(_lines_for_mastery(acc_block))
-    # Perseverance index (from aggregate)
     pi = learning.get("perseverance_index", None)
     if pi is not None:
         try:
@@ -209,34 +160,29 @@ def build_report(d: Dict[str, Any]) -> str:
     else:
         rep.append("Perseverance index: —\n")
 
-    # --- NEW: Processing Speed (per-subject response time) ---
+    # ---- 6) Processing Speed ----
     rep.append("6) Processing Speed")
     rep.append("Summary: Average response/processing time per subject based on total time spent on attempts.")
     speed_block = d.get("processing_speed", {})
     rep.extend(_lines_for_speed(speed_block))
-    rep.append("")  # blank line
+    rep.append("")
 
-    # --- Reading/Language (placeholder) ---
     rep.append("7) Reading, Language & Expression")
     rep.append("Summary: Not available in this dataset.")
     rep.append("Readability: —")
     rep.append("TTR: —\n")
 
-    # --- AI Support ---
     rep.append("8) AI Interaction Quality & Support Usage")
     rep.append("Summary: Derived hints usage (no built-in AI support fields in source).")
     rep.append(f"Hints used per attempt: {learning.get('perseverance_index','—')}\n")
 
-    # --- Motivation/Routine ---
     rep.append("9) Motivation & Routine")
     dropoff_risk = d.get("routine", {}).get("dropoff_risk", "—")
     rep.append(f"Summary: {'Low drop-off risk.' if dropoff_risk=='low' else ('Potential drop-off risk.' if dropoff_risk in ('medium','high') else '—')}\n")
 
-    # --- Technology ---
     rep.append("10) Technology & Accessibility Diagnostics")
     rep.append("Summary: Device info is partial in this dataset.\n")
 
-    # --- Recommendations ---
     rep.append("11) Goals & Recommendations")
     recs = d.get("recommendations", [])
     if recs:
@@ -244,14 +190,12 @@ def build_report(d: Dict[str, Any]) -> str:
         for r in recs:
             rep.append(f"- {r}")
     else:
-        # simple defaults if none provided
         rep.append("Recommendations:")
         rep.append("- Encourage regular short practice sessions (5–7 mins) on weaker subjects")
         rep.append("- Review missed questions in recent attempts")
         rep.append("- Use shorter sessions if average session length is below 10 mins")
     rep.append("")
 
-    # --- Unanswered ---
     rep.append("12) Unanswered & Out-of-Scope Questions")
     rep.append("Summary: Not tracked in this dataset.")
     rep.append("Total questions: —")

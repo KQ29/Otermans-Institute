@@ -1,7 +1,10 @@
 # streamlit_app.py
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
+
 from datetime import datetime, date, timedelta
+
 
 from constants import PRIMARY_JSON_PATH, SECONDARY_JSON_PATH
 from loaders import load_json, extract_user_id_and_audience, merge_data
@@ -65,7 +68,6 @@ def main():
     user_id, audience = extract_user_id_and_audience(query)
     if user_id is None:
         st.warning("Enter a query like: `user_id 1` or `user_id 2 for teacher`")
-        # quick peek at users
         users_df = pd.DataFrame(data.get("user", []))
         if not users_df.empty:
             cols = [c for c in ["user_id", "name", "email", "class_level"] if c in users_df.columns]
@@ -135,7 +137,7 @@ def main():
                 use_container_width=True
             )
 
-        # ----- All-time KPIs (2×2 pies) -----
+        # ----- All-time KPIs (combined bars) -----
         st.markdown("### All-time KPI charts")
         labels = [
             "All-time points",
@@ -159,22 +161,51 @@ def main():
         ])
 
         with tab1:
-            acc = accuracy_and_mastery(data, user_id, start_dt, end_dt)
-            st.caption(f"Overall accuracy: **{acc['overall']:.1f}%**")
-            st.plotly_chart(bar_mastery_subjects(acc["subjects"]), use_container_width=True)
+            acc_block = accuracy_and_mastery(data, user_id, start_dt, end_dt)
+            st.caption(f"Overall accuracy: **{acc_block['overall']:.1f}%**")
+            st.plotly_chart(bar_mastery_subjects(acc_block["subjects"]), use_container_width=True)
 
         with tab2:
-            spd = response_time_stats(data, user_id, start_dt, end_dt)
-            st.caption(f"Attempts: **{spd['attempts']}** • Mean: **{spd['mean']}** • Median: **{spd['median']}** • P90: **{spd['p90']}**")
+            spd_block = response_time_stats(data, user_id, start_dt, end_dt)
+            st.caption(f"Attempts: **{spd_block['attempts']}** • Mean: **{spd_block['mean']}** • Median: **{spd_block['median']}** • P90: **{spd_block['p90']}**")
             # If your time_spent is seconds, pass unit_label=' s'
-            st.plotly_chart(bar_response_time_subjects(spd["per_subject"], unit_label=" mins"), use_container_width=True)
+            st.plotly_chart(bar_response_time_subjects(spd_block["per_subject"], unit_label=" mins"), use_container_width=True)
 
         with tab3:
             eng = engagement_consistency(data, user_id, start_dt, end_dt)
             st.write("Active days:", eng["active_days"])
             st.write("Total sessions:", eng["sessions_total"])
             st.write("Longest streak:", eng["streak"])
-            # Heatmap can be added if you prefer; left minimal for clarity.
+
+            # ---- Engagement Heatmap (Mon..Sun x Weeks) ----
+            weeks = eng.get("weeks", [])
+            heat_cols = eng.get("heat", [])  # list of columns; each is [Mon..Sun]
+            days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+            if weeks and heat_cols:
+                # transpose: rows=days, cols=weeks
+                z = list(map(list, zip(*heat_cols)))  # shape 7 x num_weeks
+
+                fig = go.Figure(
+                    data=go.Heatmap(
+                        z=z,
+                        x=weeks,          # week starting dates (ISO strings)
+                        y=days,           # Mon..Sun
+                        colorscale="Blues",
+                        colorbar=dict(title="Sessions/day"),
+                        hovertemplate="Week start: %{x}<br>Day: %{y}<br>Sessions: %{z}<extra></extra>",
+                        zmin=0
+                    )
+                )
+                fig.update_layout(
+                    template="plotly_white",
+                    height=280,
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    title="Engagement Heatmap (sessions per day)"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No engagement activity in the selected period to render the heatmap.")
 
         with tab4:
             indep = independence_support(data, user_id, start_dt, end_dt)
@@ -198,11 +229,19 @@ def main():
         st.subheader("🧾 SEN Report (auto-generated)")
         if not curr["had_ts"]:
             st.warning("No reliable timestamps found in your selected range.")
+
+        # Compute report-driving KPIs (now including the NEW blocks)
+        acc_block = accuracy_and_mastery(data, user_id, start_dt, end_dt)
+        spd_block = response_time_stats(data, user_id, start_dt, end_dt)
+
         focus_score_now = compute_focus_score(curr["completion_pct"], curr["avg_session_mins"])
         focus_score_prev = compute_focus_score(prev["completion_pct"], prev["avg_session_mins"])
         focus_delta = focus_score_now - focus_score_prev
+        dropoff_risk = (
+            "high" if (curr.get("active_days", 0) <= 2 or curr["completion_pct"] < 30)
+            else ("medium" if curr["completion_pct"] < 60 else "low")
+        )
 
-        # build a minimal report payload (keeps your existing builder happy)
         report_data = {
             "student": {"name": agg["name"], "id": user_id, "class": agg.get("class_level", "—"), "year": agg.get("class_level", "—")},
             "period": {"start": start_date.isoformat(), "end": end_date.isoformat(), "generated_on": date.today().isoformat()},
@@ -216,7 +255,7 @@ def main():
                 "lessons_total": curr["lessons_total"],
                 "completion_pct": curr["completion_pct"],
                 "total_time_mins": curr["total_time_mins"],
-                "trend_vs_prev_pct": compute_trend(curr["total_time_mins"], prev["total_time_mins"]),
+                "trend_vs_prev_pct": trend_vs_prev,
             },
             "focus": {
                 "focus_score": focus_score_now,
@@ -224,18 +263,21 @@ def main():
                 "class_median": 62,
                 "avg_sustained_block_mins": curr["avg_session_mins"],
             },
-            "accommodations": {},
             "learning": {"skills": [], "perseverance_index": agg.get("avg_hints_used", "—")},
             "language": {},
             "ai_support": {"hints_per_activity": agg.get("avg_hints_used", "—")},
-            "routine": {"dropoff_risk": "high" if (curr["active_days"] <= 2 or curr["completion_pct"] < 30)
-                        else ("medium" if curr["completion_pct"] < 60 else "low")},
+            "routine": {"dropoff_risk": dropoff_risk},
             "goals": [],
             "recommendations": [],
-            "questions": {}
+            "questions": {},
+
+            # >>> These two blocks drive Sections 5 & 6 in the report <<<
+            "accuracy_mastery": acc_block,
+            "processing_speed": spd_block,
         }
+
         report_text = build_report(report_data)
-        st.text_area("Report (copy-ready)", value=report_text, height=500)
+        st.text_area("Report (copy-ready)", value=report_text, height=600)
 
         # ---------- Events table ----------
         st.markdown("### Event log")

@@ -10,6 +10,8 @@ streamlit_app_12.py
 
 sum_only.py
 
+Task_1.py
+
 Task_2.py
 
 dummy_data_full_with_skills.json
@@ -25,3 +27,21 @@ fake_data.json
 .DS_Store
 
 four_students.json
+
+streamlit_app_1.py
+
+# ignore the file at repo root
+/streamlit_app_1.py
+
+# ignore the file inside the folder
+/Streamlit_app/streamlit_app_1.py
+
+# (optional) ignore any file like streamlit_app_*.py at repo root
+/streamlit_app_*.py
+
+__pycache__/
+**/__pycache__/
+
+*.json
+.DS_Store
+.env
